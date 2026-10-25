@@ -22,19 +22,25 @@ jobs:
         with:
           ref: main
 
-      - name: Install LaTeX dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y latexmk texlive-latex-extra texlive-publishers texlive-fonts-recommended
+      - name: Compile paper with LaTeX and BibTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          working_directory: paper
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
 
-      - name: Compile paper
+      - name: Verify generated PDF and author block
         run: |
-          cd paper
-          pdflatex -interaction=nonstopmode -halt-on-error main.tex
-          bibtex main
-          pdflatex -interaction=nonstopmode -halt-on-error main.tex
-          pdflatex -interaction=nonstopmode -halt-on-error main.tex
-          cp main.pdf OWERF_Research_Paper.pdf
+          test -s paper/main.pdf
+          pdftotext -layout paper/main.pdf /tmp/paper.txt
+          grep -q "Ishant Pant" /tmp/paper.txt
+          grep -q "Dr. Sandeep Gupta" /tmp/paper.txt
+          if grep -Eiq "Siddhika|Siddhik|Agarwal|Agrawal" /tmp/paper.txt; then
+            echo "Unexpected person-name match in generated paper."
+            exit 1
+          fi
+          cp paper/main.pdf paper/OWERF_Research_Paper.pdf
+          pdfinfo paper/OWERF_Research_Paper.pdf | grep -E "Pages:|File size:"
 
       - name: Commit compiled PDF if changed
         run: |
