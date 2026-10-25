@@ -31,6 +31,8 @@ jobs:
         run: |
           cd paper
           pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          bibtex main
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
           pdflatex -interaction=nonstopmode -halt-on-error main.tex
           cp main.pdf OWERF_Research_Paper.pdf
 
@@ -38,7 +40,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add paper/OWERF_Research_Paper.pdf
+          git add -f paper/OWERF_Research_Paper.pdf
           if git diff --cached --quiet; then
             echo "Compiled PDF is unchanged; no commit needed."
           else
