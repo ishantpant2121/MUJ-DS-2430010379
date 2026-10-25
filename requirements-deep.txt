@@ -1,0 +1,2 @@
+# Optional: only for owerf_deep_encoders.py (install CPU build from pytorch.org if you have no GPU)
+torch
