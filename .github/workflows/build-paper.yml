@@ -1,0 +1,47 @@
+name: Build research paper PDF
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "paper/main.tex"
+      - "paper/references.bib"
+      - ".github/workflows/build-paper.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Install LaTeX dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y latexmk texlive-latex-extra texlive-publishers texlive-fonts-recommended
+
+      - name: Compile paper
+        run: |
+          cd paper
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          cp main.pdf OWERF_Research_Paper.pdf
+
+      - name: Commit compiled PDF if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/OWERF_Research_Paper.pdf
+          if git diff --cached --quiet; then
+            echo "Compiled PDF is unchanged; no commit needed."
+          else
+            git commit -m "build: publish compiled research paper PDF"
+            git push origin HEAD:main
+          fi
