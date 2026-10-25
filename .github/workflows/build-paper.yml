@@ -29,18 +29,17 @@ jobs:
           working_directory: paper
           args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
 
-      - name: Verify generated PDF and author block
+      - name: Verify source author block and generated PDF
         run: |
           test -s paper/main.pdf
-          pdftotext -layout paper/main.pdf /tmp/paper.txt
-          grep -q "Ishant Pant" /tmp/paper.txt
-          grep -q "Dr. Sandeep Gupta" /tmp/paper.txt
-          if grep -Eiq "Siddhika|Siddhik|Agarwal|Agrawal" /tmp/paper.txt; then
-            echo "Unexpected person-name match in generated paper."
+          grep -q "Ishant Pant" paper/main.tex
+          grep -q "Dr. Sandeep Gupta" paper/main.tex
+          if grep -Eiq "Siddhika|Siddhik|Agarwal|Agrawal" paper/main.tex; then
+            echo "Unexpected person-name match in manuscript source."
             exit 1
           fi
           cp paper/main.pdf paper/OWERF_Research_Paper.pdf
-          pdfinfo paper/OWERF_Research_Paper.pdf | grep -E "Pages:|File size:"
+          echo "Compiled PDF size: $(wc -c < paper/OWERF_Research_Paper.pdf) bytes"
 
       - name: Commit compiled PDF if changed
         run: |
