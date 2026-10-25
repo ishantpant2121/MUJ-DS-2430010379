@@ -1,6 +1,6 @@
 # MUJ-DS-2430010379
 
-## Student details
+## Repository owner details
 
 | Field | Details |
 |---|---|
@@ -14,7 +14,9 @@
 
 ## About this repository
 
-This is my personal repository for the MUJ-DS training program. It contains the required folder structure and project-related materials. The OW-ERF research prototype currently uses **synthetic data**; its results should not be interpreted as validation on real insurance claims.
+This repository supports the MUJ-DS training program and the shared OW-ERF team project. It contains the research prototype, paper source, tests, presentation, results, and supporting material, alongside the required training-program folder structure.
+
+The evaluated OW-ERF prototype currently uses **synthetic data only**. Its results are preliminary and must not be interpreted as validation on real insurance claims.
 
 ## Repository structure
 
@@ -23,25 +25,23 @@ This is my personal repository for the MUJ-DS training program. It contains the 
 - `code/` — project code copies and code-related materials
 - `resources/` — screenshots, result files, and supporting resources
 - `presentations/` — project presentation
-- `capstone/` — capstone-related materials
+- `capstone/` — space for capstone-related materials within this same repository
 
-The research prototype and its tests are also present at the repository root. Until the capstone repository is created and verified, this repository should not be assumed to be a separate capstone repository.
+**This is the single team-project repository. A separate capstone repository is not required.**
 
-## Run the current tabular prototype
-
-See [INSTALLATION.md](INSTALLATION.md) for environment setup, experiment execution, and tests.
+The research prototype and tests are also present at the repository root. See [INSTALLATION.md](INSTALLATION.md) for setup, experiment execution, and test commands.
 
 ## Current implementation status
 
 - **Implemented:** synthetic claim generator, tabular OW-ERF pipeline, leave-one-mechanism-out experiment, and Isolation Forest comparison.
-- **Tests:** the latest recorded run reported 7 passed and 1 skipped. The skipped tests require PyTorch.
+- **Automated CI:** GitHub Actions runs the pytest suite on Python 3.11 and 3.12.
+- **Latest recorded local test result:** 7 passed and 1 skipped. The skipped tests require optional PyTorch support; check the CI run and the target submission environment before describing test coverage.
 - **Not yet validated:** LSTM, CNN, and Transformer branches are written but have not been trained or evaluated.
-- **Research limitation:** all reported experimental results are from synthetic data, not real-world insurance claims.
+- **Research limitation:** all reported experimental results are from synthetic data, not real-world insurance claims. The prototype does not implement the proposed graph encoder.
 
-## Capstone repository
+## Team project and research authorship
 
-**Status: separate capstone repository not yet verified.** The previous URL pointed to `ow-erf-fraud-detection`, but a separate repository has not been confirmed through the connected GitHub account. Replace this section with the verified capstone URL after the repository is created.
+This is a **team project**, not a solo project. The repository owner's account or the person who commits code does not, by itself, determine the research paper's authorship.
 
-## Individual contributions
+The paper source is [`paper/main.tex`](paper/main.tex). Before formal submission, its author list must be reconciled with the approved project synopsis/team roster and the actual contributions to the research. Each named author should agree to the final author list, and authorship should not be assigned solely because someone is an instructor, supervisor, or team member. The paper source should only be changed after the project team and relevant faculty confirm the correct list.
 
-This is currently documented as a solo project. Contributions include problem formulation, synthetic data generation, model implementation, testing, documentation, paper preparation, and presentation preparation. AI assistance was used and is disclosed in the research materials.
