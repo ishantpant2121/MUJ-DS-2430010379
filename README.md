@@ -31,6 +31,12 @@ The evaluated OW-ERF prototype currently uses **synthetic data only**. Its resul
 
 The research prototype and tests are also present at the repository root. See [INSTALLATION.md](INSTALLATION.md) for setup, experiment execution, and test commands.
 
+## Research paper
+
+[View or download the compiled research paper PDF](paper/OWERF_Research_Paper.pdf)
+
+The repository PDF is compiled from the tracked LaTeX source in `paper/main.tex` with the bibliography in `paper/references.bib`. GitHub Actions rebuilds the PDF when those source files change.
+
 ## Current implementation status
 
 - **Implemented:** synthetic claim generator, tabular OW-ERF pipeline, leave-one-mechanism-out experiment, and Isolation Forest comparison.
