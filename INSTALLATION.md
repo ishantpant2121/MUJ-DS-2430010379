@@ -71,9 +71,9 @@ The last recorded test run reported **7 passed, 1 skipped**. The skip is associa
 
 ## 6. Optional deep-learning code
 
-The LSTM, 1D-CNN, and Transformer branches in `code/owerf_deep_encoders.py` are **written but not trained or evaluated**. The current synthetic generator does not yet provide the sequence inputs needed for a meaningful experiment.
+The LSTM, 1D-CNN, and Transformer branches in `owerf_deep_encoders.py` are **written but not trained or evaluated**. The current synthetic generator does not yet provide the sequence inputs needed for a meaningful experiment.
 
-Only if you are intentionally testing this experimental code, install PyTorch using the installation command recommended by the official PyTorch website for your operating system, then run the smoke test from the appropriate directory. Do not report the deep branches as working or evaluated until their tests and training experiments have actually completed.
+Only if you are intentionally testing this experimental code, install PyTorch using the installation command recommended by the official PyTorch website for your operating system, then run the optional smoke tests from the repository root with `python -m pytest tests/test_deep.py -v`. Do not report the deep branches as working or evaluated until their tests and training experiments have actually completed.
 
 ## Known limitations
 
