@@ -39,9 +39,12 @@ The research prototype and tests are also present at the repository root. See [I
 - **Not yet validated:** LSTM, CNN, and Transformer branches are written but have not been trained or evaluated.
 - **Research limitation:** all reported experimental results are from synthetic data, not real-world insurance claims. The prototype does not implement the proposed graph encoder.
 
-## Team project and research authorship
+## Research authorship
 
-This is a **team project**, not a solo project. The repository owner's account or the person who commits code does not, by itself, determine the research paper's authorship.
+The research paper's author block lists only:
 
-The paper source is [`paper/main.tex`](paper/main.tex). Before formal submission, its author list must be reconciled with the approved project synopsis/team roster and the actual contributions to the research. Each named author should agree to the final author list, and authorship should not be assigned solely because someone is an instructor, supervisor, or team member. The paper source should only be changed after the project team and relevant faculty confirm the correct list.
+- **Ishant Pant** — lead / first author.
+- **Dr. Sandeep Gupta** — second author and research supervisor.
+
+This is the requested author-credit format for the paper. Supporting citations and bibliography entries remain intact because they credit the external publications used as research references; they are not project team members or co-authors of this paper.
 
