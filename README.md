@@ -13,3 +13,7 @@
 ## Capstone
 https://github.com/ishantpant2121/ow-erf-fraud-detection
 
+
+## Individual Contributions
+Solo project. Contributions: problem formulation, synthetic data generator, model code, testing, documentation, paper writing, presentation. AI assistance (Claude) was used for drafting and is disclosed in the paper.
+
