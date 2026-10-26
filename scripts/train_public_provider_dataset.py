@@ -120,23 +120,8 @@ def _read_beneficiaries(path: Path) -> pd.DataFrame:
     frame = frame.drop_duplicates("BeneID", keep="first").copy()
     if "DOB" in frame:
         frame["DOB"] = pd.to_datetime(frame["DOB"], errors="coerce")
-    for col in [c for c in frame if c.startswith("ChronicCond_")]:
-        frame[f"bene_{col}"] = (pd.to_numeric(frame[col], errors="coerce") == 1).astype(float)
-        frame.drop(columns=col, inplace=True)
-    if "RenalDiseaseIndicator" in frame:
-        frame["bene_renal_disease"] = (
-            frame["RenalDiseaseIndicator"].astype(str).str.upper().str.strip() == "Y"
-        ).astype(float)
-        frame.drop(columns="RenalDiseaseIndicator", inplace=True)
-    if "Gender" in frame:
-        for val in (1, 2):
-            frame[f"bene_gender_{val}_share"] = (pd.to_numeric(frame["Gender"], errors="coerce") == val).astype(float)
-        frame.drop(columns="Gender", inplace=True)
-    if "Race" in frame:
-        for val in (1, 2, 3, 4, 5):
-            frame[f"bene_race_{val}_share"] = (pd.to_numeric(frame["Race"], errors="coerce") == val).astype(float)
-        frame.drop(columns="Race", inplace=True)
-    # Raw State and County codes are categorical; use their diversity, not numeric magnitude.
+    # Keep the original categorical columns here; _prepare_beneficiary_frame performs
+    # the single, canonical conversion to numeric flags and one-hot shares.
     return frame
 
 
@@ -147,7 +132,7 @@ def _aggregate_claim_table(
 ) -> pd.DataFrame:
     """Aggregate claim records into one row per provider without using the target label."""
     df = frame.copy()
-    df["Provider"] = df["Provider"].astype(str).str.strip()
+    df["Provider"] = df["Provider"].astype("string").str.strip()
     df = df[df["Provider"].notna() & (df["Provider"] != "")].copy()
     prefix = f"{kind}_"
     if "InscClaimAmtReimbursed" in df:
@@ -508,6 +493,11 @@ def run_dataset_experiment(
     train_test_provider_model._dataset_hashes = hashes
     report = train_test_provider_model(features, y, ids, output_dir, seed=seed)
     report["dataset_file_sha256"] = hashes
+    features_to_save = features.copy()
+    features_to_save.insert(0, "Provider", ids.to_numpy())
+    feature_path = output_dir / "public_provider_features.csv"
+    features_to_save.to_csv(feature_path, index=False)
+    report["artifacts"]["features"] = str(feature_path.as_posix())
     (output_dir / "public_provider_fraud_report.json").write_text(
         json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
     )
