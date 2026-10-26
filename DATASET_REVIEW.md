@@ -1,6 +1,6 @@
 # Public Dataset Feasibility Review
 
-**Status:** Source review completed; no external dataset has been downloaded or used to generate new experimental results.
+**Status (26 October 2026):** Source review and a supplementary provider-level train/validation/test experiment are complete. No public dataset with claim-level ground-truth labels for the four specific OW-ERF mechanisms has been identified.
 
 ## Finding
 
@@ -48,6 +48,16 @@ This study combines public Medicare provider/service data with exclusion-based p
 
 A later data-centric study reports constructing Medicare fraud classification datasets from CMS data and OIG exclusion information: https://pmc.ncbi.nlm.nih.gov/articles/PMC10173919/
 
+## Completed supplementary experiment: public provider-level train/test
+
+A separate pipeline is implemented in `scripts/train_public_provider_dataset.py`. It downloads the labelled-train tables at runtime from the [public GitHub mirror](https://github.com/reshmanalage/healthcare-provider-fraud-analytics) of the [Kaggle Healthcare Provider Fraud Detection Analysis dataset](https://www.kaggle.com/datasets/rohitrox/healthcare-provider-fraud-detection-analysis). A Mendeley Data record with the same dataset title lists a CC BY 4.0 license reference: https://data.mendeley.com/datasets/gsn2hyty37/1. Raw CSVs are not committed to this repository.
+
+The dataset has 5,410 provider-level labels: 4,904 `PotentialFraud=No` and 506 `PotentialFraud=Yes`. The pipeline creates provider-level aggregates from inpatient/outpatient claim tables and beneficiary features, then uses a stratified provider split: 3,246 train, 1,082 validation and 1,082 test providers. Providers do not cross splits.
+
+For seed 42, Logistic Regression was selected using validation average precision. On held-out test providers it achieved ROC-AUC 0.956, average precision 0.754, precision 0.629, recall 0.723, F1 0.673 and false-positive rate 0.0438 at a threshold calibrated using validation negatives. The Isolation Forest comparator achieved ROC-AUC 0.853 and average precision 0.455 at its validation-calibrated threshold. Exact file hashes, metrics, feature list and limitations are in [`results/public_provider_fraud_report.json`](results/public_provider_fraud_report.json).
+
+This is a separate provider-risk classification task. `PotentialFraud` is not claim-level adjudication and does not identify the four OW-ERF mechanism classes. It provides public-data model-training and held-out-testing capability, but it is **not direct external validation of claim-level open-world mechanism discovery**.
+
 ## Recommendation for this project
 
 1. Keep the current synthetic leave-one-mechanism-out results labelled as **preliminary synthetic evidence**.
@@ -63,4 +73,4 @@ A later data-centric study reports constructing Medicare fraud classification da
 - Bauder, R. A., and Khoshgoftaar, T. M. (2018), *The Detection of Medicare Fraud Using Machine Learning Methods with Excluded Provider Labels* (link above).
 - *Data-Centric AI for Healthcare Fraud Detection* (link above).
 
-This is a feasibility note, not a report of a new dataset experiment. No external results have been added to the paper or results table.
+This document records public-source feasibility and a separate provider-level benchmark. The main OW-ERF manuscript's claim-level mechanism results remain synthetic-only; the provider-level benchmark is reported separately and is not presented as validation of those mechanism claims.
