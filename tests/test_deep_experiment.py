@@ -17,6 +17,7 @@ def test_synthetic_generator_provides_all_encoder_inputs():
     assert data["ctx_pad_mask"].shape == (1000, 6)
     assert data["exo"].shape == (1000, 3)
     assert data["targets"].shape == (1000, 2)
+    assert data["code_profile"].shape == (1000, 4)
     assert set(np.unique(data["labels"])) == {0, 1, 2, 3, 4}
     assert np.isfinite(data["hist"]).all()
     assert np.isfinite(data["ctx"]).all()
@@ -37,6 +38,7 @@ def test_one_fold_training_calibration_and_evaluation_runs():
     assert report["hidden_mechanism"] == "collusion"
     assert report["classes_seen_in_training"] == ["benign", "upcoding", "unbundling", "phantom_billing"]
     assert 0.0 <= report["multimodal_novelty_roc_auc"] <= 1.0
+    assert report["multimodal_unseen_recall_after_explained_rarity_filter"] > 0.0
     assert 0.0 <= report["raw_input_profile_roc_auc"] <= 1.0
     assert 0.0 <= report["isolation_forest_novelty_roc_auc"] <= 1.0
     assert np.isfinite(report["training_loss_first_epoch"])
