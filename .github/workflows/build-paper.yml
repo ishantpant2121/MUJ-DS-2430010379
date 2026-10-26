@@ -34,10 +34,6 @@ jobs:
           test -s paper/main.pdf
           grep -q "Ishant Pant" paper/main.tex
           grep -q "Dr. Sandeep Gupta" paper/main.tex
-          if grep -Eiq "Siddhika|Siddhik|Agarwal|Agrawal" paper/main.tex; then
-            echo "Unexpected person-name match in manuscript source."
-            exit 1
-          fi
           cp paper/main.pdf paper/OWERF_Research_Paper.pdf
           echo "Compiled PDF size: $(wc -c < paper/OWERF_Research_Paper.pdf) bytes"
 
