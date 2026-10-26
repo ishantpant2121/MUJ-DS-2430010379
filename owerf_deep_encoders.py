@@ -59,6 +59,7 @@ class OWERFEncoder(nn.Module):
         h = self.embed(hist, codes, ctx, ctx_pad_mask)
         logits = self.classifier(h)
         mu, log_sigma = self.expect(exo).chunk(2, dim=1)
+        log_sigma = log_sigma.clamp(-3.0, 2.0)  # keep heteroscedastic NLL numerically stable
         return h, logits, mu, log_sigma
 
 
