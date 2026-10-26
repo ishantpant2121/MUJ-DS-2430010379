@@ -44,11 +44,23 @@ The PDF is built from `paper/main.tex` and `paper/references.bib`. GitHub Action
 
 [Public dataset feasibility review](DATASET_REVIEW.md) documents potential CMS Medicare and OIG exclusion-list sources and why these provider-level data do not directly validate claim-level discovery of the four synthetic fraud mechanisms. No external dataset experiment has been run yet.
 
+## Run the deep prototype
+
+Install the base dependencies and CPU PyTorch, then run a synthetic hidden-mechanism experiment:
+
+```bash
+python -m pip install -r requirements.txt
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+python owerf_deep_experiment.py --n-samples 4000 --epochs 12 --hidden collusion --seed 42
+```
+
+The command trains on three known synthetic fraud mechanisms, calibrates on a separate known-class split, tests on the held-out mechanism, applies outcome/relationship/code-sequence explained-rarity checks, and compares novelty ranking with Isolation Forest. Use `--hidden all` to run the four-mechanism matrix. A single-mechanism run writes `results/deep_prototype_results.json`; the CI matrix is published to that same file on `main`. This is a proof-of-pipeline on generated data, not external validation or a complete temporal graph model.
+
 ## Current implementation status
 
 - **Implemented and evaluated:** synthetic claim generator, tabular OW-ERF pipeline, leave-one-mechanism-out experiment, and Isolation Forest comparison.
 - **Automated CI:** GitHub Actions runs the pytest suite on Python 3.11 and 3.12.
-- **Deep-learning branches:** Experimental LSTM, 1D-CNN, and Transformer encoder code is included in the repository.
+- **Deep prototype:** A runnable synthetic-data training/evaluation pipeline trains the LSTM, 1D-CNN, and Transformer branches, calibrates novelty, applies explained-rarity filtering, and compares with Isolation Forest. It is not real-claims validation.
 - **Research limitations:** all reported experimental results use synthetic data; the evaluated prototype is tabular and does not implement the proposed graph encoder. Results should not be generalized to real-world claims without appropriate data and validation.
 
 ## Research authorship

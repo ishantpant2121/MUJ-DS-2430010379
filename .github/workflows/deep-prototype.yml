@@ -1,0 +1,80 @@
+name: Deep prototype smoke test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "owerf_deep_encoders.py"
+      - "owerf_deep_experiment.py"
+      - "tests/test_deep_experiment.py"
+      - "requirements-deep.txt"
+      - ".github/workflows/deep-prototype.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "owerf_deep_encoders.py"
+      - "owerf_deep_experiment.py"
+      - "tests/test_deep_experiment.py"
+      - "requirements-deep.txt"
+      - ".github/workflows/deep-prototype.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deep-prototype:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install CPU PyTorch and project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r requirements.txt
+      - name: Run deep-prototype tests
+        run: python -m pytest tests/test_deep.py tests/test_deep_experiment.py -v
+      - name: Run end-to-end hidden-mechanism experiment
+        run: |
+          python owerf_deep_experiment.py --n-samples 1600 --epochs 3 --batch-size 128 --hidden all --seed 42 --output results/deep_prototype_ci.json
+          test -s results/deep_prototype_ci.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("results/deep_prototype_ci.json").read_text())
+          runs = report.get("experiments", [])
+          assert len(runs) == 4, f"Expected 4 held-out mechanisms, got {len(runs)}"
+          assert {run["hidden_mechanism"] for run in runs} == {
+              "upcoding", "unbundling", "phantom_billing", "collusion"
+          }
+          for run in runs:
+              assert run["n_test"] > 0
+              assert 0 <= run["multimodal_novelty_roc_auc"] <= 1
+              assert 0 <= run["isolation_forest_novelty_roc_auc"] <= 1
+          print("PASS: four held-out mechanisms have finite, bounded evaluation metrics.")
+          PY
+      - name: Commit reproducible report on main
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          cp results/deep_prototype_ci.json results/deep_prototype_results.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/deep_prototype_results.json
+          if git diff --cached --quiet; then
+            echo "Deep-prototype result report is unchanged."
+          else
+            git commit -m "results: record synthetic deep prototype evaluation"
+            git push origin HEAD:main
+          fi
+      - name: Upload experiment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ow-erf-deep-prototype-report
+          path: results/deep_prototype_ci.json
+          if-no-files-found: error

@@ -69,11 +69,30 @@ python -m pytest -v
 
 The last recorded test run reported **7 passed, 1 skipped**. The skip is associated with the optional PyTorch tests; this status should be rechecked in the environment used for submission.
 
-## 6. Optional deep-learning code
+## 6. Run the deep prototype
 
-The LSTM, 1D-CNN, and Transformer branches in `owerf_deep_encoders.py` are **written but not trained or evaluated**. The current synthetic generator does not yet provide the sequence inputs needed for a meaningful experiment.
+The repository now includes a runnable synthetic-data pipeline in `owerf_deep_experiment.py`. It trains the LSTM, 1D-CNN and Transformer branches on generated history, code-sequence and context-token inputs; calibrates a novelty score on a separate known-class split; applies the explained-rarity filter; and compares the ranking with Isolation Forest.
 
-Only if you are intentionally testing this experimental code, install PyTorch using the installation command recommended by the official PyTorch website for your operating system, then run the optional smoke tests from the repository root with `python -m pytest tests/test_deep.py -v`. Do not report the deep branches as working or evaluated until their tests and training experiments have actually completed.
+Install the base dependencies and CPU PyTorch:
+
+```bash
+python -m pip install -r requirements.txt
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+```
+
+Run one held-out-mechanism experiment:
+
+```bash
+python owerf_deep_experiment.py --n-samples 4000 --epochs 12 --hidden collusion --seed 42
+```
+
+The script writes its measurements to `results/deep_prototype_results.json`. Change `--hidden` to `upcoding`, `unbundling`, or `phantom_billing` to hold out a different mechanism, or use `--hidden all` for a matrix over all four held-out mechanisms. The explained-rarity gate evaluates outcome residuals plus unusual relationship-context and procedure-code profiles. Run the associated tests with:
+
+```bash
+python -m pytest tests/test_deep.py tests/test_deep_experiment.py -v
+```
+
+This is an experimental synthetic proof-of-pipeline. The input sequences and context are generated proxies, not real claims; the prototype is not the full temporal heterogeneous graph model, and the smoke run is not a publication-grade ablation study. Do not present it as real-world validation.
 
 ## Known limitations
 
