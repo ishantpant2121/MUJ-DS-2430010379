@@ -14,7 +14,7 @@
 
 ## About this repository
 
-This repository contains the **individual OW-ERF research project led and maintained by Ishant Pant**. There are no other student team members. The manuscript lists Dr. Sandeep Gupta as research supervisor and second author.
+This repository contains the **individual OW-ERF research project led and maintained by Ishant Pant**. There are no other student team members. The manuscript lists Dr. Sandeep Gupta as research supervisor.
 
 The evaluated OW-ERF prototype currently uses **synthetic data only**. Its preliminary results must not be interpreted as validation on real insurance claims.
 
@@ -48,12 +48,12 @@ The PDF is built from `paper/main.tex` and `paper/references.bib`. GitHub Action
 
 - **Implemented and evaluated:** synthetic claim generator, tabular OW-ERF pipeline, leave-one-mechanism-out experiment, and Isolation Forest comparison.
 - **Automated CI:** GitHub Actions runs the pytest suite on Python 3.11 and 3.12.
-- **Deep-learning branches:** LSTM, 1D-CNN, and Transformer code is present but has not been trained or evaluated.
+- **Deep-learning branches:** Experimental LSTM, 1D-CNN, and Transformer encoder code is included in the repository.
 - **Research limitations:** all reported experimental results use synthetic data; the evaluated prototype is tabular and does not implement the proposed graph encoder. Results should not be generalized to real-world claims without appropriate data and validation.
 
 ## Research authorship
 
 - **Ishant Pant** — lead / first author.
-- **Dr. Sandeep Gupta** — research supervisor and second author.
+- **Dr. Sandeep Gupta** — research supervisor.
 
 Bibliography entries retain the names of researchers whose publications are cited; those citations credit external research and do not identify additional project team members.
