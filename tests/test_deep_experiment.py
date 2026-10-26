@@ -36,7 +36,8 @@ def test_one_fold_training_calibration_and_evaluation_runs():
     assert report["n_test"] > 0
     assert report["hidden_mechanism"] == "collusion"
     assert report["classes_seen_in_training"] == ["benign", "upcoding", "unbundling", "phantom_billing"]
-    assert 0.0 <= report["deep_novelty_roc_auc"] <= 1.0
+    assert 0.0 <= report["multimodal_novelty_roc_auc"] <= 1.0
+    assert 0.0 <= report["raw_input_profile_roc_auc"] <= 1.0
     assert 0.0 <= report["isolation_forest_novelty_roc_auc"] <= 1.0
     assert np.isfinite(report["training_loss_first_epoch"])
     assert np.isfinite(report["training_loss_last_epoch"])
