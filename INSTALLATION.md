@@ -115,6 +115,8 @@ The workflow writes the report to `results/public_provider_fraud_report.json`, t
 
 **Label limitation:** `PotentialFraud` is a provider-level benchmark label. It is not verified per-claim fraud ground truth and does not identify upcoding, unbundling, phantom billing, or collusion individually. Treat this as a separate external provider-classification experiment, not as proof that claim-level OW-ERF generalizes.
 
+Latest recorded held-out test run (seed 42): Logistic Regression selected using validation average precision achieved ROC-AUC 0.956, average precision 0.754, precision 0.629, recall 0.723 and F1 0.673, at a validation-calibrated false-positive rate of 4.38%. The exact metrics, split sizes, file hashes and feature names are in `results/public_provider_fraud_report.json`. These are provider-level `PotentialFraud` benchmark results, not claim-level OW-ERF mechanism validation.
+
 ## Known limitations
 
 - Uses synthetic data only.
