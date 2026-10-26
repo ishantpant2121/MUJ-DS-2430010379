@@ -362,18 +362,32 @@ def run_experiment(
     test_relation_inconsistency = _global_mahalanobis(
         benign_context_reference, test_context
     )
+    # Procedure-code sequence patterns are a separate explanation signal.
+    # This lets the filter retain unbundling-like code anomalies even when
+    # the claimed amount and length of stay are otherwise ordinary.
+    benign_code_reference = data["code_profile"][benign_train_ids]
+    calibration_code_inconsistency = _global_mahalanobis(
+        benign_code_reference, data["code_profile"][calibration_ids]
+    )
+    test_code_inconsistency = _global_mahalanobis(
+        benign_code_reference, data["code_profile"][test_ids]
+    )
     calibration_outcome_inconsistency = _inconsistency(
         targets_norm[calibration_ids], cal_out["mu"], cal_out["log_sigma"]
     )
     test_outcome_inconsistency = _inconsistency(
         targets_norm[test_ids], test_out["mu"], test_out["log_sigma"]
     )
-    calibration_inconsistency = np.maximum(
-        calibration_outcome_inconsistency, calibration_relation_inconsistency
-    )
-    test_inconsistency = np.maximum(
-        test_outcome_inconsistency, test_relation_inconsistency
-    )
+    calibration_inconsistency = np.maximum.reduce([
+        calibration_outcome_inconsistency,
+        calibration_relation_inconsistency,
+        calibration_code_inconsistency,
+    ])
+    test_inconsistency = np.maximum.reduce([
+        test_outcome_inconsistency,
+        test_relation_inconsistency,
+        test_code_inconsistency,
+    ])
     tau = float(np.quantile(calibration_inconsistency[calibration_benign], 0.95))
 
     alpha = 0.05
@@ -413,6 +427,8 @@ def run_experiment(
         "explained_rarity_threshold_tau": tau,
         "relational_anomaly_used_by_explained_rarity_filter": True,
         "hidden_mechanism_relation_inconsistency_median": float(np.median(test_relation_inconsistency[is_hidden])) if is_hidden.any() else None,
+        "hidden_mechanism_code_inconsistency_median": float(np.median(test_code_inconsistency[is_hidden])) if is_hidden.any() else None,
+        "relational_and_code_anomalies_used_by_explained_rarity_filter": True,
         "multimodal_novelty_roc_auc": float(roc_auc_score(hidden_binary, test_score)),
         "multimodal_novelty_average_precision": float(average_precision_score(hidden_binary, test_score)),
         "raw_input_profile_roc_auc": float(roc_auc_score(hidden_binary, input_profile_score)),
@@ -448,18 +464,48 @@ def main() -> None:
     parser.add_argument("--n-samples", type=int, default=4000)
     parser.add_argument("--epochs", type=int, default=12)
     parser.add_argument("--batch-size", type=int, default=128)
-    parser.add_argument("--hidden", choices=MECHANISMS, default="collusion")
+    parser.add_argument("--hidden", choices=(*MECHANISMS, "all"), default="collusion")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", default="results/deep_prototype_results.json")
     args = parser.parse_args()
-    result = run_experiment(
-        n_samples=args.n_samples,
-        epochs=args.epochs,
-        batch_size=args.batch_size,
-        hidden=args.hidden,
-        seed=args.seed,
-        output_path=args.output,
-    )
+    if args.hidden == "all":
+        experiments = [
+            run_experiment(
+                n_samples=args.n_samples,
+                epochs=args.epochs,
+                batch_size=args.batch_size,
+                hidden=mechanism,
+                seed=args.seed,
+                output_path=None,
+            )
+            for mechanism in MECHANISMS
+        ]
+        result: dict[str, Any] = {
+            "prototype": "OW-ERF four-mechanism synthetic evaluation matrix",
+            "dataset": "generated synthetic claims only; no real patient/insurance data",
+            "seed": args.seed,
+            "n_samples_per_run": args.n_samples,
+            "epochs_per_run": args.epochs,
+            "experiments": experiments,
+            "limitations": [
+                "Synthetic proof-of-pipeline only; input sequences and context are generated proxies.",
+                "One mechanism is held out per experiment; repeated seeds and the full graph architecture remain future work.",
+            ],
+        }
+        if args.output:
+            output = Path(args.output)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(result, indent=2) + "\\n", encoding="utf-8")
+            result["output_path"] = str(output)
+    else:
+        result = run_experiment(
+            n_samples=args.n_samples,
+            epochs=args.epochs,
+            batch_size=args.batch_size,
+            hidden=args.hidden,
+            seed=args.seed,
+            output_path=args.output,
+        )
     print(json.dumps(result, indent=2))
 
 
