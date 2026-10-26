@@ -139,6 +139,7 @@ def generate_synthetic_claims(
         "labels": labels,
         "rare_severe": rare_severe,
         "raw_profile": raw_profile,
+        "code_profile": code_stats,
         "tabular": tabular,
     }
 
@@ -495,7 +496,7 @@ def main() -> None:
         if args.output:
             output = Path(args.output)
             output.parent.mkdir(parents=True, exist_ok=True)
-            output.write_text(json.dumps(result, indent=2) + "\\n", encoding="utf-8")
+            output.write_text(json.dumps(result, indent=2), encoding="utf-8")
             result["output_path"] = str(output)
     else:
         result = run_experiment(
