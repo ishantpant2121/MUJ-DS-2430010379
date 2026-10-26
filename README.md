@@ -77,6 +77,12 @@ python scripts/score_provider_features.py
 
 By default, raw CSVs are downloaded into ignored `data/external/raw/`. Outputs include `results/public_provider_fraud_report.json`, `results/public_provider_test_predictions.csv`, `results/public_provider_features.csv`, `results/public_provider_scored_features.csv`, and the fitted model at `models/public_provider_fraud_model.joblib`. The GitHub Actions workflow repeats this train/validation/test run and commits the report/model artifacts.
 
+**Latest public benchmark run (seed 42):** 5,410 providers, 506 labelled `PotentialFraud=Yes` (9.35%); 3,246 train / 1,082 validation / 1,082 held-out test providers. The model was selected by validation average precision. Logistic Regression was selected; on the held-out test set it achieved ROC-AUC **0.956**, average precision **0.754**, precision **0.629**, recall **0.723**, F1 **0.673**, and false-positive rate **4.38%** at the threshold calibrated from validation negatives. The Isolation Forest comparison achieved ROC-AUC 0.853 and average precision 0.455 at its corresponding validation-calibrated threshold.
+
+[Open the exact JSON report](results/public_provider_fraud_report.json) · [Open held-out predictions](results/public_provider_test_predictions.csv) · [Open the trained model artifact](models/public_provider_fraud_model.joblib)
+
+These metrics are for **provider-level benchmark classification only**. They do not validate claim-level discovery of upcoding, unbundling, phantom billing, or collusion, and a `PotentialFraud` label is not proof that every claim by a provider is fraudulent.
+
 ## Current implementation status
 
 - **Implemented and evaluated:** synthetic claim generator, tabular OW-ERF pipeline, leave-one-mechanism-out experiment, and Isolation Forest comparison.
