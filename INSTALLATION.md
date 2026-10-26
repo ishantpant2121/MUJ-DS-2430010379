@@ -94,6 +94,27 @@ python -m pytest tests/test_deep.py tests/test_deep_experiment.py -v
 
 This is an experimental synthetic proof-of-pipeline. The input sequences and context are generated proxies, not real claims; the prototype is not the full temporal heterogeneous graph model, and the smoke run is not a publication-grade ablation study. Do not present it as real-world validation.
 
+## 7. Train/test on the public provider-level dataset
+
+Install the base requirements, including pandas and joblib:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Then run:
+
+```bash
+python scripts/train_public_provider_dataset.py --seed 42
+python scripts/score_provider_features.py
+```
+
+The training script downloads four labelled-train CSVs into `data/external/raw/` from the [public GitHub mirror](https://github.com/reshmanalage/healthcare-provider-fraud-analytics) of the [Kaggle dataset](https://www.kaggle.com/datasets/rohitrox/healthcare-provider-fraud-detection-analysis). The files are ignored by Git. It builds provider-level aggregates from inpatient/outpatient claims and beneficiary demographics/condition flags, uses stratified provider-level 60/20/20 train/validation/test splits, chooses among Logistic Regression, Random Forest and Extra Trees on validation average precision, calibrates an alert threshold to a 5% validation false-positive rate, and reports test metrics. Isolation Forest is included as an unsupervised comparator.
+
+The workflow writes the report to `results/public_provider_fraud_report.json`, test predictions to `results/public_provider_test_predictions.csv`, provider features to `results/public_provider_features.csv`, scored rows to `results/public_provider_scored_features.csv`, and a reusable model bundle to `models/public_provider_fraud_model.joblib`.
+
+**Label limitation:** `PotentialFraud` is a provider-level benchmark label. It is not verified per-claim fraud ground truth and does not identify upcoding, unbundling, phantom billing, or collusion individually. Treat this as a separate external provider-classification experiment, not as proof that claim-level OW-ERF generalizes.
+
 ## Known limitations
 
 - Uses synthetic data only.
