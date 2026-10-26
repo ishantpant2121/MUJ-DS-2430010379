@@ -91,7 +91,16 @@ def generate_synthetic_claims(
         codes[row, 1::2] = rng.integers(250, CODE_VOCAB, size=CODE_LEN // 2)
 
     # Tokens represent claim, hospital, doctor, package, diagnosis and neighbours.
-    ctx = rng.normal(0, 0.45, size=(n_samples, CONTEXT_TOKENS, CONTEXT_DIM)).astype(np.float32)
+    # The first token is the claim token and carries the observed current claim
+    # values plus exogenous context. This lets the classifier see cost/LOS while
+    # the separate expectation head learns whether those values are explainable.
+    ctx = rng.normal(0, 0.25, size=(n_samples, CONTEXT_TOKENS, CONTEXT_DIM)).astype(np.float32)
+    ctx[:, 0, 3] = severity
+    ctx[:, 0, 4] = comorbidity
+    ctx[:, 0, 5] = age_scaled
+    ctx[:, 0, 6] = (log_amount - 8.2) / 1.5
+    ctx[:, 0, 7] = log_los / 2.0
+    ctx[:, 0, 8] = (codes > 200).mean(axis=1)
     ctx[collusion, :, 0] += 1.5
     ctx[collusion, :, 1] += 1.2
     ctx[collusion, :, 2] += 0.8
