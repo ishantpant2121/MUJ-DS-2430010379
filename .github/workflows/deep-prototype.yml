@@ -1,0 +1,52 @@
+name: Deep prototype smoke test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "owerf_deep_encoders.py"
+      - "owerf_deep_experiment.py"
+      - "tests/test_deep_experiment.py"
+      - "requirements-deep.txt"
+      - ".github/workflows/deep-prototype.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "owerf_deep_encoders.py"
+      - "owerf_deep_experiment.py"
+      - "tests/test_deep_experiment.py"
+      - "requirements-deep.txt"
+      - ".github/workflows/deep-prototype.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deep-prototype:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install CPU PyTorch and project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r requirements.txt
+      - name: Run deep-prototype tests
+        run: python -m pytest tests/test_deep.py tests/test_deep_experiment.py -v
+      - name: Run end-to-end hidden-mechanism experiment
+        run: |
+          python owerf_deep_experiment.py --n-samples 1600 --epochs 3 --batch-size 128 --hidden collusion --seed 42 --output results/deep_prototype_ci.json
+          test -s results/deep_prototype_ci.json
+      - name: Upload experiment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ow-erf-deep-prototype-report
+          path: results/deep_prototype_ci.json
+          if-no-files-found: error
