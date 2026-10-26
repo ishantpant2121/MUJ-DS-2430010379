@@ -29,7 +29,7 @@ jobs:
           working_directory: paper
           args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
 
-      - name: Verify source author block and generated PDF
+      - name: Verify manuscript and generated PDF
         run: |
           test -s paper/main.pdf
           grep -q "Ishant Pant" paper/main.tex
@@ -46,15 +46,15 @@ jobs:
             echo "Compiled PDF is unchanged; no commit needed."
           else
             git commit -m "build: publish compiled research paper PDF"
-          for attempt in 1 2 3 4 5; do
-            git fetch origin main
-            git rebase origin/main
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            echo "Push raced with another main update (attempt $attempt); retrying after rebase."
-            sleep $((attempt * 2))
-          done
-          echo "Could not publish generated artifact after 5 attempts."
-          exit 1
+            for attempt in 1 2 3 4 5; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                exit 0
+              fi
+              echo "Push raced with another main update (attempt $attempt); retrying after rebase."
+              sleep $((attempt * 2))
+            done
+            echo "Could not publish generated artifact after 5 attempts."
+            exit 1
           fi
