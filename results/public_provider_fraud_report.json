@@ -1,0 +1,219 @@
+{
+  "experiment": "public Medicare healthcare provider fraud-risk classification",
+  "dataset_source": "https://www.kaggle.com/datasets/rohitrox/healthcare-provider-fraud-detection-analysis",
+  "mirror_source": "https://github.com/reshmanalage/healthcare-provider-fraud-analytics",
+  "dataset_citation_and_license_reference": "https://data.mendeley.com/datasets/gsn2hyty37/1",
+  "label_grain": "provider-level PotentialFraud Yes/No; not claim-level fraud-mechanism ground truth",
+  "interpretation_warning": "A positive label is the dataset's PotentialFraud designation, not a verified per-claim adjudication and not a label for the four OW-ERF synthetic mechanisms.",
+  "seed": 42,
+  "python_version": "3.11.17",
+  "pandas_version": "2.3.3",
+  "scikit_learn_version": "1.9.1",
+  "provider_count": 5410,
+  "label_counts": {
+    "not_flagged": 4904,
+    "potential_fraud": 506
+  },
+  "positive_prevalence": 0.09353049907578559,
+  "feature_count": 99,
+  "split": {
+    "train_providers": 3246,
+    "train_positive": 304,
+    "validation_providers": 1082,
+    "validation_positive": 101,
+    "test_providers": 1082,
+    "test_positive": 101,
+    "test_negative": 981,
+    "random_seed": 42,
+    "split_rule": "stratified provider-level 60/20/20 train/validation/test; no provider crosses splits"
+  },
+  "models_selected_on_validation": {
+    "logistic_regression": {
+      "validation_average_precision": 0.6453042793165075,
+      "validation_roc_auc": 0.9113452629666635,
+      "threshold_calibrated_to_5pct_validation_fpr": 0.8169336021424584
+    },
+    "random_forest": {
+      "validation_average_precision": 0.6347745342303286,
+      "validation_roc_auc": 0.9223211311956885,
+      "threshold_calibrated_to_5pct_validation_fpr": 0.4092944679581691
+    },
+    "extra_trees": {
+      "validation_average_precision": 0.6240580039657099,
+      "validation_roc_auc": 0.928664426075635,
+      "threshold_calibrated_to_5pct_validation_fpr": 0.5250471105674441
+    }
+  },
+  "selected_model": "logistic_regression",
+  "selected_model_test_metrics_at_validation_5pct_fpr_threshold": {
+    "roc_auc": 0.9558038372644604,
+    "average_precision": 0.7536248378651039,
+    "threshold": 0.8169336021424584,
+    "precision": 0.6293103448275862,
+    "recall": 0.7227722772277227,
+    "f1": 0.6728110599078341,
+    "balanced_accuracy": 0.8394697267891926,
+    "false_positive_rate": 0.04383282364933741,
+    "specificity": 0.9561671763506626,
+    "alert_rate": 0.10720887245841035,
+    "confusion_matrix_tn_fp_fn_tp": [
+      938,
+      43,
+      28,
+      73
+    ]
+  },
+  "all_supervised_models_test_metrics": {
+    "logistic_regression": {
+      "roc_auc": 0.9558038372644604,
+      "average_precision": 0.7536248378651039,
+      "threshold": 0.8169336021424584,
+      "precision": 0.6293103448275862,
+      "recall": 0.7227722772277227,
+      "f1": 0.6728110599078341,
+      "balanced_accuracy": 0.8394697267891926,
+      "false_positive_rate": 0.04383282364933741,
+      "specificity": 0.9561671763506626,
+      "alert_rate": 0.10720887245841035,
+      "confusion_matrix_tn_fp_fn_tp": [
+        938,
+        43,
+        28,
+        73
+      ]
+    },
+    "random_forest": {
+      "roc_auc": 0.9660277954400944,
+      "average_precision": 0.7729323631455797,
+      "threshold": 0.4092944679581691,
+      "precision": 0.6097560975609756,
+      "recall": 0.7425742574257426,
+      "f1": 0.6696428571428571,
+      "balanced_accuracy": 0.8468222969085899,
+      "false_positive_rate": 0.04892966360856269,
+      "specificity": 0.9510703363914373,
+      "alert_rate": 0.11367837338262476,
+      "confusion_matrix_tn_fp_fn_tp": [
+        933,
+        48,
+        26,
+        75
+      ]
+    },
+    "extra_trees": {
+      "roc_auc": 0.9638679464276703,
+      "average_precision": 0.7656093041430917,
+      "threshold": 0.5250471105674441,
+      "precision": 0.6324786324786325,
+      "recall": 0.7326732673267327,
+      "f1": 0.6788990825688074,
+      "balanced_accuracy": 0.8444202218386976,
+      "false_positive_rate": 0.04383282364933741,
+      "specificity": 0.9561671763506626,
+      "alert_rate": 0.10813308687615526,
+      "confusion_matrix_tn_fp_fn_tp": [
+        938,
+        43,
+        27,
+        74
+      ]
+    }
+  },
+  "isolation_forest_test_metrics_at_validation_5pct_fpr_threshold": {
+    "roc_auc": 0.8533926787174131,
+    "average_precision": 0.4550055416199889,
+    "threshold": 0.002474375789975891,
+    "precision": 0.46835443037974683,
+    "recall": 0.36633663366336633,
+    "f1": 0.4111111111111111,
+    "balanced_accuracy": 0.6617615890029369,
+    "false_positive_rate": 0.04281345565749235,
+    "specificity": 0.9571865443425076,
+    "alert_rate": 0.07301293900184842,
+    "confusion_matrix_tn_fp_fn_tp": [
+      939,
+      42,
+      64,
+      37
+    ]
+  },
+  "top_features": [
+    {
+      "feature": "ip_los_max",
+      "importance": 1.51038532516167
+    },
+    {
+      "feature": "op_unique_beneficiaries",
+      "importance": 1.313035042426422
+    },
+    {
+      "feature": "ip_unique_beneficiaries",
+      "importance": 1.2934461046288963
+    },
+    {
+      "feature": "ip_reimbursement_sum",
+      "importance": 1.010516219335106
+    },
+    {
+      "feature": "op_claim_count",
+      "importance": 0.902626706217829
+    },
+    {
+      "feature": "op_unique_claim_ids",
+      "importance": 0.902626706217829
+    },
+    {
+      "feature": "op_bene_race_1_share",
+      "importance": 0.8353005893355977
+    },
+    {
+      "feature": "ip_dx_codes_max",
+      "importance": 0.7646068372006833
+    },
+    {
+      "feature": "op_active_months",
+      "importance": 0.743432428518408
+    },
+    {
+      "feature": "ip_los_median",
+      "importance": 0.7388417408280119
+    },
+    {
+      "feature": "op_other_physicians_nunique",
+      "importance": 0.6878453151071554
+    },
+    {
+      "feature": "op_operating_physician_missing_share",
+      "importance": 0.6663230590032443
+    },
+    {
+      "feature": "ip_other_physician_missing_share",
+      "importance": 0.6633635861851074
+    },
+    {
+      "feature": "op_bene_gender_2_share",
+      "importance": 0.6448294202752194
+    },
+    {
+      "feature": "op_deductible_sum",
+      "importance": 0.6067660290870406
+    }
+  ],
+  "dataset_file_sha256": {
+    "train_labels.csv": "09315a0e0c262ddfb91df15df76b196a80de2ff1001fad46b362b562df2e7e43",
+    "train_beneficiary.csv": "1fb7fb14efeaae04b970bfeb3176cdf938c755748217377109081d6dae01ecfd",
+    "train_inpatient.csv": "395bc2d01a102bf44a26ba4b36c63e7086943eaf2d5d1489c776bf47d1613ac0",
+    "train_outpatient.csv": "f532ed7e25f50d6abf3ba89ceeb2a23e2a352792f90d086b13999a561fd23889"
+  },
+  "artifacts": {
+    "predictions": "results/public_provider_test_predictions.csv",
+    "model": "models/public_provider_fraud_model.joblib",
+    "features": "results/public_provider_features.csv"
+  },
+  "limitations": [
+    "The target is at provider level; results do not validate claim-level open-world detection or the four individual synthetic fraud mechanisms.",
+    "PotentialFraud is a benchmark designation, not proof that every claim associated with a provider is fraudulent.",
+    "The GitHub mirror is used to download the labelled-train tables at runtime; the raw tables are not committed here.",
+    "Performance is for a single seed and a held-out provider split; repeated seeds, temporal splits, calibration study, and independent external replication are future work."
+  ]
+}
