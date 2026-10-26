@@ -430,7 +430,9 @@ def train_test_provider_model(
     prediction_path = output_dir / "public_provider_test_predictions.csv"
     prediction_frame.to_csv(prediction_path, index=False)
 
-    bundle_path = output_dir / "public_provider_fraud_model.joblib"
+    model_dir = output_dir.parent / "models"
+    model_dir.mkdir(parents=True, exist_ok=True)
+    bundle_path = model_dir / "public_provider_fraud_model.joblib"
     joblib.dump({
         "model": selected_model,
         "model_name": selected_name,
