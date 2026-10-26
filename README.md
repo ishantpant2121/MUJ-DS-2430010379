@@ -40,6 +40,10 @@ Empty placeholder directories and duplicate copies of source/results files have 
 
 The PDF is built from `paper/main.tex` and `paper/references.bib`. GitHub Actions rebuilds the PDF when the manuscript, bibliography, or build workflow changes.
 
+## Dataset feasibility
+
+[Public dataset feasibility review](DATASET_REVIEW.md) documents potential CMS Medicare and OIG exclusion-list sources and why these provider-level data do not directly validate claim-level discovery of the four synthetic fraud mechanisms. No external dataset experiment has been run yet.
+
 ## Current implementation status
 
 - **Implemented and evaluated:** synthetic claim generator, tabular OW-ERF pipeline, leave-one-mechanism-out experiment, and Isolation Forest comparison.
