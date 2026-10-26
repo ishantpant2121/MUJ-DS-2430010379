@@ -258,6 +258,14 @@ def engineer_provider_features(
     features = ip.join(op, how="outer").replace([np.inf, -np.inf], np.nan)
     features = features.reindex(labels["Provider"].tolist()).copy()
     features.index.name = "Provider"
+    # For providers with no records in one setting (IP/OP), distinguish no activity
+    # from a missing measurement on an observed claim.
+    for kind in ("ip", "op"):
+        count_col = f"{kind}_claim_count"
+        if count_col in features:
+            no_claims = features[count_col].isna()
+            kind_cols = [col for col in features if col.startswith(f"{kind}_")]
+            features.loc[no_claims, kind_cols] = 0.0
     # All model input columns are numeric; provider IDs stay outside the feature matrix.
     features = features.apply(pd.to_numeric, errors="coerce")
     keep = [c for c in features.columns if features[c].notna().any() and features[c].nunique(dropna=True) > 1]
@@ -486,7 +494,7 @@ def run_dataset_experiment(
 ) -> dict[str, Any]:
     hashes = ensure_dataset(data_dir, force_download=force_download)
     labels = pd.read_csv(data_dir / FILES["labels"], low_memory=False)
-    beneficiaries = pd.read_csv(data_dir / FILES["beneficiary"], low_memory=False)
+    beneficiaries = _read_beneficiaries(data_dir / FILES["beneficiary"])
     inpatient = _read_claims(data_dir / FILES["inpatient"])
     outpatient = _read_claims(data_dir / FILES["outpatient"])
     features, y, ids = engineer_provider_features(inpatient, outpatient, beneficiaries, labels)
