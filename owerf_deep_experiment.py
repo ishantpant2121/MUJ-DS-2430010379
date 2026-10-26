@@ -347,16 +347,34 @@ def run_experiment(
     )
     input_profile_score = _ecdf(train_profile_md, test_profile_md)
 
-    calibration_inconsistency = _inconsistency(
-        targets_norm[calibration_ids], cal_out["mu"], cal_out["log_sigma"]
-    )
+    # The explained-rarity filter must also assess relational oddity. A collusive
+    # provider may have ordinary amounts and length-of-stay values, so outcome
+    # residuals alone would incorrectly explain away its unusual relationships.
     calibration_benign = data["labels"][calibration_ids] == 0
     if not calibration_benign.any():
         raise RuntimeError("Calibration split must contain benign claims.")
-    tau = float(np.quantile(calibration_inconsistency[calibration_benign], 0.95))
-    test_inconsistency = _inconsistency(
+    benign_context_reference = data["ctx"][benign_train_ids, :, :3].mean(axis=1)
+    calibration_context = data["ctx"][calibration_ids, :, :3].mean(axis=1)
+    test_context = data["ctx"][test_ids, :, :3].mean(axis=1)
+    calibration_relation_inconsistency = _global_mahalanobis(
+        benign_context_reference, calibration_context
+    )
+    test_relation_inconsistency = _global_mahalanobis(
+        benign_context_reference, test_context
+    )
+    calibration_outcome_inconsistency = _inconsistency(
+        targets_norm[calibration_ids], cal_out["mu"], cal_out["log_sigma"]
+    )
+    test_outcome_inconsistency = _inconsistency(
         targets_norm[test_ids], test_out["mu"], test_out["log_sigma"]
     )
+    calibration_inconsistency = np.maximum(
+        calibration_outcome_inconsistency, calibration_relation_inconsistency
+    )
+    test_inconsistency = np.maximum(
+        test_outcome_inconsistency, test_relation_inconsistency
+    )
+    tau = float(np.quantile(calibration_inconsistency[calibration_benign], 0.95))
 
     alpha = 0.05
     p_values = (1.0 + (calibration_score[:, None] >= test_score[None, :]).sum(axis=0)) / (len(calibration_score) + 1.0)
@@ -393,6 +411,8 @@ def run_experiment(
         "training_loss_last_epoch": loss_history[-1],
         "alpha": alpha,
         "explained_rarity_threshold_tau": tau,
+        "relational_anomaly_used_by_explained_rarity_filter": True,
+        "hidden_mechanism_relation_inconsistency_median": float(np.median(test_relation_inconsistency[is_hidden])) if is_hidden.any() else None,
         "multimodal_novelty_roc_auc": float(roc_auc_score(hidden_binary, test_score)),
         "multimodal_novelty_average_precision": float(average_precision_score(hidden_binary, test_score)),
         "raw_input_profile_roc_auc": float(roc_auc_score(hidden_binary, input_profile_score)),
