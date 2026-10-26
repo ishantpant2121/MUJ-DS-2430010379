@@ -86,7 +86,7 @@ Run one held-out-mechanism experiment:
 python owerf_deep_experiment.py --n-samples 4000 --epochs 12 --hidden collusion --seed 42
 ```
 
-The script writes its measurements to `results/deep_prototype_results.json`. Change `--hidden` to `upcoding`, `unbundling`, or `phantom_billing` to hold out a different mechanism. Run the associated tests with:
+The script writes its measurements to `results/deep_prototype_results.json`. Change `--hidden` to `upcoding`, `unbundling`, or `phantom_billing` to hold out a different mechanism, or use `--hidden all` for a matrix over all four held-out mechanisms. The explained-rarity gate evaluates outcome residuals plus unusual relationship-context and procedure-code profiles. Run the associated tests with:
 
 ```bash
 python -m pytest tests/test_deep.py tests/test_deep_experiment.py -v
