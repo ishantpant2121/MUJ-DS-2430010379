@@ -110,6 +110,17 @@ def generate_synthetic_claims(
         if count:
             ctx_pad_mask[row, -int(count):] = True
 
+    code_stats = np.column_stack([
+        codes.mean(axis=1) / CODE_VOCAB,
+        codes.std(axis=1) / CODE_VOCAB,
+        (codes > 200).mean(axis=1),
+        np.asarray([len(np.unique(row)) / CODE_LEN for row in codes]),
+    ]).astype(np.float32)
+    history_profile = np.concatenate([hist.mean(axis=1), hist.std(axis=1)], axis=1)
+    context_profile = np.concatenate([ctx.mean(axis=1), ctx.std(axis=1)], axis=1)
+    # Complement the learned embedding with a covariance-based distance over
+    # the observable multimodal input profile (claim values, history, codes, context).
+    raw_profile = np.concatenate([exo, targets, history_profile, context_profile, code_stats], axis=1).astype(np.float32)
     tabular = np.column_stack([
         exo,
         targets,
@@ -127,6 +138,7 @@ def generate_synthetic_claims(
         "targets": targets,
         "labels": labels,
         "rare_severe": rare_severe,
+        "raw_profile": raw_profile,
         "tabular": tabular,
     }
 
@@ -203,6 +215,16 @@ def _mahalanobis(
         dist = np.einsum("bi,ij,bj->b", delta, precision, delta)
         distances.append(dist)
     return np.min(np.stack(distances, axis=0), axis=0)
+
+
+def _global_mahalanobis(reference: np.ndarray, query: np.ndarray) -> np.ndarray:
+    """Regularized input-profile distance for modalities a supervised encoder may underweight."""
+    center = reference.mean(axis=0)
+    covariance = np.atleast_2d(np.cov(reference, rowvar=False))
+    covariance += np.eye(covariance.shape[0]) * 0.05
+    precision = np.linalg.pinv(covariance)
+    delta = query - center
+    return np.einsum("bi,ij,bj->b", delta, precision, delta)
 
 
 def _ecdf(reference: np.ndarray, values: np.ndarray) -> np.ndarray:
@@ -307,12 +329,23 @@ def run_experiment(
     train_md = _mahalanobis(train_out["h"], train_y, train_out["h"])
     cal_md = _mahalanobis(train_out["h"], train_y, cal_out["h"])
     test_md = _mahalanobis(train_out["h"], train_y, test_out["h"])
+    train_profile_md = _global_mahalanobis(data["raw_profile"][train_ids], data["raw_profile"][train_ids])
+    cal_profile_md = _global_mahalanobis(data["raw_profile"][train_ids], data["raw_profile"][calibration_ids])
+    test_profile_md = _global_mahalanobis(data["raw_profile"][train_ids], data["raw_profile"][test_ids])
 
-    novelty_reference_energy = train_energy
-    novelty_reference_md = train_md
-    train_score = 0.5 * _ecdf(novelty_reference_energy, train_energy) + 0.5 * _ecdf(novelty_reference_md, train_md)
-    calibration_score = 0.5 * _ecdf(novelty_reference_energy, cal_energy) + 0.5 * _ecdf(novelty_reference_md, cal_md)
-    test_score = 0.5 * _ecdf(novelty_reference_energy, test_energy) + 0.5 * _ecdf(novelty_reference_md, test_md)
+    # Hybrid novelty score: classifier energy + learned-space distance + observed
+    # multimodal input-profile distance. Empirical CDFs put the signals on a common scale.
+    calibration_score = (
+        0.20 * _ecdf(train_energy, cal_energy)
+        + 0.25 * _ecdf(train_md, cal_md)
+        + 0.55 * _ecdf(train_profile_md, cal_profile_md)
+    )
+    test_score = (
+        0.20 * _ecdf(train_energy, test_energy)
+        + 0.25 * _ecdf(train_md, test_md)
+        + 0.55 * _ecdf(train_profile_md, test_profile_md)
+    )
+    input_profile_score = _ecdf(train_profile_md, test_profile_md)
 
     calibration_inconsistency = _inconsistency(
         targets_norm[calibration_ids], cal_out["mu"], cal_out["log_sigma"]
@@ -345,6 +378,7 @@ def run_experiment(
 
     report: dict[str, Any] = {
         "prototype": "OW-ERF synthetic multimodal training and evaluation",
+        "novelty_score": "0.20 energy-CDF + 0.25 latent-Mahalanobis-CDF + 0.55 raw-multimodal-profile-Mahalanobis-CDF",
         "dataset": "generated synthetic claims only; no real patient/insurance data",
         "hidden_mechanism": hidden,
         "seed": seed,
@@ -359,13 +393,14 @@ def run_experiment(
         "training_loss_last_epoch": loss_history[-1],
         "alpha": alpha,
         "explained_rarity_threshold_tau": tau,
-        "deep_novelty_roc_auc": float(roc_auc_score(hidden_binary, test_score)),
-        "deep_novelty_average_precision": float(average_precision_score(hidden_binary, test_score)),
-        "deep_unseen_recall_at_alpha": hidden_recall,
-        "deep_unseen_recall_after_explained_rarity_filter": hidden_recall_after_filter,
-        "deep_benign_rejection_rate_at_alpha": float(novelty_flag[is_benign].mean()) if is_benign.any() else None,
-        "deep_benign_escalation_rate_after_filter": float(escalate[is_benign].mean()) if is_benign.any() else None,
-        "deep_rare_severe_benign_escalation_rate": float(escalate[rare_test].mean()) if rare_test.any() else None,
+        "multimodal_novelty_roc_auc": float(roc_auc_score(hidden_binary, test_score)),
+        "multimodal_novelty_average_precision": float(average_precision_score(hidden_binary, test_score)),
+        "raw_input_profile_roc_auc": float(roc_auc_score(hidden_binary, input_profile_score)),
+        "multimodal_unseen_recall_at_alpha": hidden_recall,
+        "multimodal_unseen_recall_after_explained_rarity_filter": hidden_recall_after_filter,
+        "multimodal_benign_rejection_rate_at_alpha": float(novelty_flag[is_benign].mean()) if is_benign.any() else None,
+        "multimodal_benign_escalation_rate_after_filter": float(escalate[is_benign].mean()) if is_benign.any() else None,
+        "multimodal_rare_severe_benign_escalation_rate": float(escalate[rare_test].mean()) if rare_test.any() else None,
         "isolation_forest_novelty_roc_auc": float(roc_auc_score(hidden_binary, test_if_score)),
         "isolation_forest_average_precision": float(average_precision_score(hidden_binary, test_if_score)),
         "isolation_forest_unseen_recall_at_matched_training_alert_rate": float(
