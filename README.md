@@ -54,7 +54,7 @@ python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
 python owerf_deep_experiment.py --n-samples 4000 --epochs 12 --hidden collusion --seed 42
 ```
 
-The command trains on three known synthetic fraud mechanisms, calibrates on a separate known-class split, tests on the held-out mechanism, applies the explained-rarity gate, compares novelty ranking with Isolation Forest, and writes `results/deep_prototype_results.json`. Use `--hidden upcoding`, `--hidden unbundling`, or `--hidden phantom_billing` to test another held-out mechanism. This is a proof-of-pipeline on generated data, not external validation or a complete temporal graph model.
+The command trains on three known synthetic fraud mechanisms, calibrates on a separate known-class split, tests on the held-out mechanism, applies outcome/relationship/code-sequence explained-rarity checks, and compares novelty ranking with Isolation Forest. Use `--hidden all` to run the four-mechanism matrix. A single-mechanism run writes `results/deep_prototype_results.json`; the CI matrix is published to that same file on `main`. This is a proof-of-pipeline on generated data, not external validation or a complete temporal graph model.
 
 ## Current implementation status
 
