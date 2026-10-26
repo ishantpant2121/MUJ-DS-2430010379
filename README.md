@@ -56,6 +56,27 @@ python owerf_deep_experiment.py --n-samples 4000 --epochs 12 --hidden collusion 
 
 The command trains on three known synthetic fraud mechanisms, calibrates on a separate known-class split, tests on the held-out mechanism, applies outcome/relationship/code-sequence explained-rarity checks, and compares novelty ranking with Isolation Forest. Use `--hidden all` to run the four-mechanism matrix. A single-mechanism run writes `results/deep_prototype_results.json`; the CI matrix is published to that same file on `main`. This is a proof-of-pipeline on generated data, not external validation or a complete temporal graph model.
 
+## Public data train/test benchmark
+
+A separate supervised **provider-level** benchmark is available in `scripts/train_public_provider_dataset.py`. It downloads the labelled training tables at runtime from the public GitHub mirror of the Kaggle Healthcare Provider Fraud Detection Analysis dataset, builds provider aggregates, trains Logistic Regression / Random Forest / Extra Trees, selects a model using validation average precision, evaluates once on a held-out provider test split, and compares with Isolation Forest. The raw dataset is not committed.
+
+Dataset references:
+- [Kaggle Healthcare Provider Fraud Detection Analysis](https://www.kaggle.com/datasets/rohitrox/healthcare-provider-fraud-detection-analysis)
+- [Public GitHub data mirror](https://github.com/reshmanalage/healthcare-provider-fraud-analytics)
+- [Mendeley Data citation / CC BY 4.0 reference](https://data.mendeley.com/datasets/gsn2hyty37/1)
+
+**Important:** the target is provider-level `PotentialFraud` Yes/No, not ground-truth claim labels and not the four OW-ERF synthetic mechanism labels. This is a supplementary external benchmark for provider-risk classification; it does not validate claim-level open-world mechanism discovery.
+
+Run the full public-data training and held-out test experiment:
+
+```bash
+python -m pip install -r requirements.txt
+python scripts/train_public_provider_dataset.py --seed 42
+python scripts/score_provider_features.py
+```
+
+By default, raw CSVs are downloaded into ignored `data/external/raw/`. Outputs include `results/public_provider_fraud_report.json`, `results/public_provider_test_predictions.csv`, `results/public_provider_features.csv`, `results/public_provider_scored_features.csv`, and the fitted model at `models/public_provider_fraud_model.joblib`. The GitHub Actions workflow repeats this train/validation/test run and commits the report/model artifacts.
+
 ## Current implementation status
 
 - **Implemented and evaluated:** synthetic claim generator, tabular OW-ERF pipeline, leave-one-mechanism-out experiment, and Isolation Forest comparison.
