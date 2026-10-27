@@ -128,6 +128,8 @@ python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 60 --batc
 python scripts/summarize_deep_comparison.py --native results/controlled_deep_model_comparison/native_60ep/standalone_deep_model_metrics.json --shared-context results/controlled_deep_model_comparison/shared_context_60ep/standalone_deep_model_metrics.json --output results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json
 ```
 
+The 25-epoch controlled comparison is also documented in `paper/main.tex` as a separate table; the earlier 5-epoch baseline table remains unchanged. The 60-epoch run will be summarized separately if its validation completes successfully.
+
 The native and controlled reports are both preserved. The full temporal heterogeneous graph encoder and real-claims evaluation are separate research gaps.
 
 ### Recorded standalone deep-model results
