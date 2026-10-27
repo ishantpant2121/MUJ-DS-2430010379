@@ -385,6 +385,7 @@ def _fit_one_model(
         "model": name,
         "hidden_mechanism": MECHANISMS[hidden_id - 1],
         "seed": seed,
+        "model_seed": seed,
         "device": str(device),
         "epochs_requested": epochs,
         "best_epoch": best_epoch,
@@ -462,7 +463,10 @@ def run_benchmark(
             if not np.any(data["labels"][test_ids] == hidden_id):
                 raise RuntimeError(f"Test fold {hidden} has no hidden-mechanism claims.")
 
-            for model_index, name in enumerate(MODEL_NAMES):
+            # Keep the same data/fold-specific initialization seed across architectures
+            # so architecture comparisons are paired by generator seed and fold.
+            model_seed = seed + hidden_id * 100
+            for name in MODEL_NAMES:
                 result = _fit_one_model(
                     name=name,
                     data=data,
@@ -475,7 +479,7 @@ def run_benchmark(
                     hidden_id=hidden_id,
                     epochs=epochs,
                     batch_size=batch_size,
-                    seed=seed + model_index * 100,
+                    seed=model_seed,
                     output_dir=output,
                     save_weights=save_weights,
                 )
