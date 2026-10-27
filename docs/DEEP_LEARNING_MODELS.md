@@ -45,14 +45,14 @@ The native benchmark uses different modalities by design, which means its scores
 
 The validated 25-epoch pilot used 3 seeds × 4 held-out mechanisms per model per mode (72 fits total). Its shared-context means ± SD were: LSTM accuracy 0.968 ± 0.016 / novel AUROC 0.701 ± 0.209; CNN accuracy 0.970 ± 0.019 / AUROC 0.756 ± 0.167; Transformer accuracy 0.978 ± 0.010 / AUROC 0.806 ± 0.104. Novel recall at conformal alpha 0.05 was 0.229, 0.297 and 0.323 respectively (with large SDs). Best validation epochs for shared-input LSTM/CNN were near the 25-epoch cap, so a 60-epoch controlled run is being executed with validation-based selection. The new summary is `results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json`; the app prefers the 60-epoch report once available and falls back to the 25-epoch pilot. Both are synthetic results and do not establish real-claim model superiority.
 
-## Controlled comparison results (25-epoch pilot)
+## Controlled comparison results (60-epoch follow-up)
 
-Across 12 fold/seed runs per architecture, with 3 seeds and 4 held-out mechanisms, the shared-context mode measured:
-- LSTM: accuracy 0.968 ± 0.016, macro-F1 0.865 ± 0.076, novel AUROC 0.701 ± 0.209, AP 0.152 ± 0.092, novel recall at alpha 0.05 = 0.229 ± 0.183.
-- 1D-CNN: accuracy 0.970 ± 0.019, macro-F1 0.860 ± 0.096, novel AUROC 0.756 ± 0.167, AP 0.185 ± 0.137, novel recall 0.297 ± 0.268.
-- Transformer: accuracy 0.978 ± 0.010, macro-F1 0.910 ± 0.046, novel AUROC 0.806 ± 0.104, AP 0.179 ± 0.134, novel recall 0.323 ± 0.254.
+The paired run used 3 generator seeds × 4 held-out mechanisms, with 36 fits in native mode and 36 in shared-context mode. Shared-context results (mean ± SD over 12 mechanism/seed runs per architecture):
+- LSTM: known accuracy 0.979 ± 0.010; macro-F1 0.908 ± 0.054; novel AUROC 0.721 ± 0.210; AP 0.169 ± 0.105; novel recall at α=0.05 = 0.250 ± 0.166; known false-rejection 0.048 ± 0.019.
+- 1D-CNN: accuracy 0.973 ± 0.016; macro-F1 0.865 ± 0.091; AUROC 0.759 ± 0.171; AP 0.188 ± 0.141; novel recall 0.354 ± 0.325; known false-rejection 0.054 ± 0.015.
+- Transformer: accuracy 0.983 ± 0.009; macro-F1 0.926 ± 0.042; AUROC 0.816 ± 0.090; AP 0.174 ± 0.103; novel recall 0.349 ± 0.228; known false-rejection 0.061 ± 0.021.
 
-The controlled results suggest the original native accuracy gap was driven substantially by modality. They still show high variance and weak novel recall; the Transformer known false-rejection rate was 0.061 ± 0.025. The 60-epoch follow-up is separate, because the shared-context LSTM/CNN validation best epochs approached the cap. These metrics apply only to synthetic generated claims.
+The results confirm a strong modality effect in the native comparison. Novel recall remains variable, and 3/12 shared-context LSTM runs plus 1/12 CNN runs selected epoch 60, so a larger training budget or early-stopping analysis may still be warranted. Results are synthetic only, with three seeds; they are not a statistically conclusive ranking or real-claims validation. Exact native/shared metric files and weights are committed under results/controlled_deep_model_comparison. The 25-epoch pilot remains separately archived.
 
 ## Metrics and exact interpretation
 
