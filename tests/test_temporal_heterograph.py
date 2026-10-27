@@ -28,7 +28,7 @@ def test_schema_has_explicit_typed_nodes_and_relations():
     assert len(report["typed_relations"]) == len(RELATION_NAMES) == 6
     assert report["node_types"]["Claim"] == 800
     assert report["node_types"]["Admission"] == 800
-    assert "strictly before" in report["temporal_policy"]
+    assert "index < start" in report["temporal_policy"]
 
 
 def test_strict_past_snapshot_indices():
