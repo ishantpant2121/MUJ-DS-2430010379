@@ -8,15 +8,15 @@
 | **Registration Number** | 2430010379 |
 | **Branch** | Data Science |
 | **Batch** | D |
-| **Project Title** | Open-World Explained-Rarity Filtering for Health-Insurance Claim Fraud (OW-ERF) |
+| **Project Title** | Insurance Intelligence: Personalized Policy Recommendation + Open-World Fraud Detection |
 | **GitHub Username** | [ishantpant2121](https://github.com/ishantpant2121) |
 | **Training Program** | MUJ-DS Training Program, Batch D |
 
 ## About this repository
 
-This repository contains the **individual OW-ERF research project led and maintained by Ishant Pant**. There are no other student team members. The manuscript lists Dr. Sandeep Gupta as research supervisor.
+This repository contains an individual **Insurance Intelligence** prototype led and maintained by Ishant Pant, with Dr. Sandeep Gupta identified as research supervisor. It now contains two separate modules: (1) customer-facing policy recommendation from a policy catalogue and (2) provider/claim fraud-risk research under the OW-ERF open-world methodology.
 
-The evaluated OW-ERF prototype currently uses **synthetic data only**. Its preliminary results must not be interpreted as validation on real insurance claims.
+The bundled policy catalogue and the OW-ERF v0.2 graph pilot use illustrative synthetic data. The public Medicare provider benchmark is a separate provider-level classification task and does not validate the four claim-level OW-ERF mechanisms.
 
 ## Repository structure
 
@@ -26,13 +26,30 @@ The evaluated OW-ERF prototype currently uses **synthetic data only**. Its preli
 - `resources/` — screenshots of experiment/test runs
 - `results/` — canonical recorded experiment results
 - `tests/` — tests for the tabular prototype and optional deep-learning code
-- `owerf_core.py` — evaluated tabular prototype and experiment entry point
-- `owerf_deep_encoders.py` — experimental LSTM, 1D-CNN, and Transformer branches
-- `requirements.txt` — dependencies for the evaluated tabular prototype
+- `policy_recommender.py` — explainable policy catalogue ranking with reasons, cautions and rule-based clause extraction
+- `data/demo_policy_catalog.json` and `data/demo_customer_profile.json` — fictional sample inputs for the recommender
+- `owerf_core.py` — earlier tabular OW-ERF prototype
+- `owerf_deep_encoders.py` and `owerf_deep_experiment.py` — fused LSTM, 1D-CNN and Transformer synthetic training pipeline
+- `owerf_v02_benchmark.py` — new temporal causal-relational pilot matching the main stages in manuscript v0.2
+- `scripts/train_public_provider_dataset.py` — separate public provider-level train/validation/test pipeline
+- `requirements.txt` — common data and ML dependencies
 - `requirements-deep.txt` — optional dependencies for experimental deep-learning branches
 - `INSTALLATION.md` — setup, run, and test instructions
 
 Empty placeholder directories and duplicate copies of source/results files have been removed. The project does not require a separate capstone repository.
+
+## Part 1 — Personalized policy recommendation
+
+The user-facing recommender ranks catalogue records by a transparent weighted compatibility score for affordability, requested sum insured, benefits, pre-existing-condition waiting periods, restrictions and local cashless-network count. Each ranked policy includes a score breakdown, fit reasons, missing benefits and cautions.
+
+Run the demo:
+
+```bash
+python policy_recommender.py --profile data/demo_customer_profile.json --catalog data/demo_policy_catalog.json --top-k 3 --output results/policy_recommendations_demo.json
+python -m pytest tests/test_policy_recommender.py -v
+```
+
+**Important:** the four bundled plans are fictional test fixtures, not real insurer products. Clause extraction is a small rule/keyword baseline, not semantic/legal interpretation. For real use, load verified current policy wording and official product/customer-information sheets. IRDAI advises checking room-rent/ICU limits, pre-existing-condition and specific waiting periods, exclusions, co-payments, sub-limits and network hospitals: [IRDAI health-insurance guidance](https://irdai.gov.in/health-dept).
 
 ## Research paper
 
@@ -42,7 +59,7 @@ The PDF is built from `paper/main.tex` and `paper/references.bib`. GitHub Action
 
 ## Dataset feasibility
 
-[Public dataset feasibility review](DATASET_REVIEW.md) documents potential CMS Medicare and OIG exclusion-list sources and why these provider-level data do not directly validate claim-level discovery of the four synthetic fraud mechanisms. No external dataset experiment has been run yet.
+[Public dataset review](DATASET_REVIEW.md) records the separate provider-level benchmark that has been run on the Healthcare Provider Fraud Detection Analysis dataset. Its `PotentialFraud` target is provider-level, not per-claim mechanism truth; it is not the evaluation benchmark for the OW-ERF v0.2 synthetic mechanism folds.
 
 ## Run the deep prototype
 
@@ -55,6 +72,25 @@ python owerf_deep_experiment.py --n-samples 4000 --epochs 12 --hidden collusion 
 ```
 
 The command trains on three known synthetic fraud mechanisms, calibrates on a separate known-class split, tests on the held-out mechanism, applies outcome/relationship/code-sequence explained-rarity checks, and compares novelty ranking with Isolation Forest. Use `--hidden all` to run the four-mechanism matrix. A single-mechanism run writes `results/deep_prototype_results.json`; the CI matrix is published to that same file on `main`. This is a proof-of-pipeline on generated data, not external validation or a complete temporal graph model.
+
+## Part 2 — OW-ERF v0.2 temporal relational pilot
+
+The new uploaded manuscript is a registered-report-style design document: it is explicitly **pre-implementation** and contains no empirical findings. The implementation is tracked separately from the manuscript so design intent is not confused with results.
+
+Run all four leave-one-mechanism-out folds:
+
+```bash
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+python -m pip install hdbscan
+python owerf_v02_benchmark.py --n-samples 2400 --epochs 2 --batch-size 128 --hidden all --tier 2 --seed 42 --output-dir results/owerf_v02_pilot
+python -m pytest tests/test_owerf_v02_benchmark.py -v
+```
+
+The pilot implements timestamped claim-to-entity edges, relation-specific attention over **past-only entity summaries**, episodic pseudo-novel energy training, energy/Mahalanobis CDF fusion, split-conformal p-values, a legitimate-only clinical expectation head, legitimate-only structural references, explained-rarity escalation, HDBSCAN clustering (DBSCAN fallback if HDBSCAN is unavailable), and audit-oriented metrics. It produces a report, test predictions, an edge list and a separate hidden-ground-truth table for evaluation.
+
+[Implementation map and gaps](docs/OW_ERF_V02_IMPLEMENTATION_MAP.md) lists each of the eight stages against actual code.
+
+**Scope limitation:** this is a parametric synthetic pilot, not yet the full manuscript benchmark. It does not currently run Synthea or use a curated/validated table of official AB-PMJAY HBP 2.2 package rates; nor does it implement full arbitrary-node PyTorch-Geometric HGT/R-GCN or every baseline, ablation, camouflage sweep and repeated-seed run in the manuscript. Official design references: [Synthea](https://github.com/synthetichealth/synthea) and [NHA HBP 2.2 manual](https://nha.gov.in/img/resources/HBP-2.2-manual.pdf).
 
 ## Public data train/test benchmark
 
@@ -85,10 +121,12 @@ These metrics are for **provider-level benchmark classification only**. They do 
 
 ## Current implementation status
 
-- **Implemented and evaluated:** synthetic claim generator, tabular OW-ERF pipeline, leave-one-mechanism-out experiment, and Isolation Forest comparison.
-- **Automated CI:** GitHub Actions runs the pytest suite on Python 3.11 and 3.12.
-- **Deep prototype:** A runnable synthetic-data training/evaluation pipeline trains the LSTM, 1D-CNN, and Transformer branches, calibrates novelty, applies explained-rarity filtering, and compares with Isolation Forest. It is not real-claims validation.
-- **Research limitations:** all reported experimental results use synthetic data; the evaluated prototype is tabular and does not implement the proposed graph encoder. Results should not be generalized to real-world claims without appropriate data and validation.
+- **Policy recommendation:** working transparent ranking prototype with reasons/cautions and heuristic clause facts; demo policies are fictional.
+- **OW-ERF deep model:** trained LSTM/1D-CNN/Transformer synthetic experiment with four held-out mechanisms; see `results/deep_prototype_results.json`.
+- **OW-ERF v0.2 method pilot:** temporal relational-context encoder, pseudo-novel energy training, fused novelty, conformal rejection, legitimate-only explanation references, clustering and audit metrics; details in the implementation map and the automated result report.
+- **Public-data comparator:** a separate provider-level model has been trained and tested; details in `results/public_provider_fraud_report.json`.
+- **Automated CI:** standard tests run on Python 3.11/3.12; dedicated workflows exercise PyTorch, policy ranking and dataset/model pipelines.
+- **Still incomplete:** full Synthea ingestion, verified HBP 2.2 package/rate mapping, arbitrary-node PyG HGT/R-GCN, all paper baselines/ablations, camouflage/documentation sweeps and multi-seed confirmatory runs. All synthetic prototype metrics are exploratory and must not be presented as real-claims validation.
 
 ## Research authorship
 
