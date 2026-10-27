@@ -387,6 +387,8 @@ def run_fold(
     tier: int = 2,
     seed: int = 42,
     alpha: float = 0.05,
+    fraud_rate: float = 0.08,
+    benign_outlier_rate: float = 0.015,
     output_dir: str | None = None,
 ) -> dict[str, Any]:
     """Run one chronological leave-one-out / leave-two-out OW-ERF pilot fold."""
@@ -394,7 +396,10 @@ def run_fold(
     torch.manual_seed(seed)
     torch.set_num_threads(1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    data = generate_synthetic_claim_graph(n_samples=n_samples, seed=seed, tier=tier, hidden_mechanisms=hidden)
+    data = generate_synthetic_claim_graph(
+        n_samples=n_samples, seed=seed, tier=tier, hidden_mechanisms=hidden,
+        fraud_rate=fraud_rate, benign_outlier_rate=benign_outlier_rate
+    )
     n = n_samples
     train_end, val_end, cal_end = int(0.60*n), int(0.70*n), int(0.80*n)
     train_ids = np.arange(0, train_end)
@@ -773,6 +778,8 @@ def run_matrix(
     hidden: str = "all",
     tier: int = 2,
     seed: int = 42,
+    fraud_rate: float = 0.08,
+    benign_outlier_rate: float = 0.015,
     output_dir: str = "results/owerf_v02_pilot",
 ) -> dict[str, Any]:
     if hidden == "all":
@@ -787,12 +794,15 @@ def run_matrix(
         reports.append(run_fold(
             n_samples=n_samples, epochs=epochs, batch_size=batch_size,
             hidden_mechanisms=fold, tier=tier, seed=seed + i,
+            fraud_rate=fraud_rate, benign_outlier_rate=benign_outlier_rate,
             output_dir=str(root / ("_".join(fold))),
         ))
     result = {
         "experiment": "OW-ERF v0.2 synthetic benchmark matrix",
         "dataset_scope": "parametric synthetic pilot only",
         "n_samples_per_fold": n_samples, "epochs_per_fold": epochs,
+        "fraud_rate_design_parameter": fraud_rate,
+        "benign_outlier_rate_design_parameter": benign_outlier_rate,
         "base_seed": seed, "folds": reports,
         "limitations": [
             "Single seed per fold; no significance claims.",
@@ -812,12 +822,16 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--hidden", default="all", help="one mechanism, comma-separated leave-two-out pair, or 'all' for leave-one-out matrix")
     parser.add_argument("--tier", type=int, choices=[1, 2, 3], default=2)
+    parser.add_argument("--fraud-rate", type=float, default=0.08)
+    parser.add_argument("--benign-outlier-rate", type=float, default=0.015)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output-dir", default="results/owerf_v02_pilot")
     args = parser.parse_args()
     report = run_matrix(
         n_samples=args.n_samples, epochs=args.epochs, batch_size=args.batch_size,
-        hidden=args.hidden, tier=args.tier, seed=args.seed, output_dir=args.output_dir,
+        hidden=args.hidden, tier=args.tier, seed=args.seed,
+        fraud_rate=args.fraud_rate, benign_outlier_rate=args.benign_outlier_rate,
+        output_dir=args.output_dir,
     )
     print(json.dumps(report, indent=2, allow_nan=False))
 
