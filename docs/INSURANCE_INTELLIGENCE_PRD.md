@@ -113,14 +113,14 @@ The public healthcare-provider dataset benchmark predicts provider-level Potenti
 
 ## 8A. Controlled LSTM/CNN/Transformer architecture ablation
 
-The initial native comparison and the controlled same-input comparison answer different questions. In native mode, the LSTM sees claim-history features, the CNN sees procedure-code IDs, and the Transformer sees relational-context tokens; therefore architecture and modality vary together. The 25-epoch controlled pilot gives all models the same standardized 6-by-16 relational-context tensor and padding mask. The scaler is fitted only on valid training tokens, padding is zeroed, the LSTM packs valid lengths, the CNN uses mask-aware pooling, and the Transformer uses its key-padding mask.
+The native and controlled comparisons answer different questions. Native mode uses the architecture's intended modality; shared-context mode gives the LSTM, continuous-input CNN and Transformer the same standardized 6-by-16 relational-context tensor and padding mask. Scaling is fitted on valid training tokens only, padded values are zeroed, the LSTM packs valid lengths, the CNN uses mask-aware pooling, and the Transformer uses its key-padding mask. The 60-epoch run uses 3 generator seeds × 4 held-out mechanisms, with 36 fits per mode.
 
-Across 3 generator seeds × 4 held-out mechanisms, the measured shared-context means ± SD were:
-- LSTM: known-class accuracy 0.968 ± 0.016; novel-mechanism AUROC 0.701 ± 0.209; AP 0.152 ± 0.092; novel recall at alpha 0.05 = 0.229 ± 0.183.
-- 1D-CNN: accuracy 0.970 ± 0.019; AUROC 0.756 ± 0.167; AP 0.185 ± 0.137; novel recall 0.297 ± 0.268.
-- Transformer: accuracy 0.978 ± 0.010; AUROC 0.806 ± 0.104; AP 0.179 ± 0.134; novel recall 0.323 ± 0.254.
+Measured shared-context means ± SD over 12 mechanism/seed runs:
+- LSTM: known accuracy 0.979 ± 0.010; macro-F1 0.908 ± 0.054; novel AUROC 0.721 ± 0.210; AP 0.169 ± 0.105; novel recall at alpha 0.05 = 0.250 ± 0.166; known false-rejection 0.048 ± 0.019.
+- 1D-CNN: accuracy 0.973 ± 0.016; macro-F1 0.865 ± 0.091; AUROC 0.759 ± 0.171; AP 0.188 ± 0.141; novel recall 0.354 ± 0.325; known false-rejection 0.054 ± 0.015.
+- Transformer: accuracy 0.983 ± 0.009; macro-F1 0.926 ± 0.042; AUROC 0.816 ± 0.090; AP 0.174 ± 0.103; novel recall 0.349 ± 0.228; known false-rejection 0.061 ± 0.021.
 
-The comparison strongly indicates that the large native accuracy gap for LSTM/CNN is partly driven by which features each branch receives. The Transformer has identical native/shared results because its native input was already the shared-context tensor. Novel recall remains low/highly variable and the Transformer known false-rejection rate is slightly above the nominal 5% threshold. The LSTM/CNN validation-selected epochs were near the 25-epoch cap, so the longer controlled run is being repeated at a 60-epoch cap. This remains a synthetic experiment with three seeds, not a statistically definitive ranking and not evidence of real insurance-claim performance.
+This controlled result confirms a substantial modality effect in the native comparison. Novel recall still varies widely. Three shared-context LSTM runs and one CNN run selected epoch 60, so more convergence analysis may be needed. The result is synthetic and descriptive over three seeds; it is not real-claims validation and does not establish a statistically decisive model ranking. The exact aggregate report, per-mode metrics and selected checkpoints are committed under results/controlled_deep_model_comparison/; the separate 25-epoch pilot is retained.
 
 ## 9. Ethical and regulatory guardrails
 

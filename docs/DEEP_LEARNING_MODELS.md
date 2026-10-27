@@ -39,20 +39,24 @@ The script scripts/train_evaluate_deep_models.py trains each architecture indepe
 
 The 3 models × 4 held-out mechanisms × 3 generator seeds create 36 trained model fits. Checkpoints and per-run metric records are keyed by model, withheld mechanism and seed.
 
-## Controlled architecture ablation
+## Controlled architecture comparison: native vs shared context
 
-The native benchmark uses different modalities by design, which means its scores compare full pipelines (architecture plus modality) rather than architecture alone. For a controlled ablation, use `--input-mode shared_context`: every model receives the same standardized context tensor of shape (N, 6, 16) and the same padding mask. The scaler is fitted only on valid context tokens from training rows, and padding is set to zero after scaling. The LSTM uses packed sequences to ignore trailing padding; the continuous-input CNN uses mask-aware pooling; the Transformer uses its key-padding mask.
+The native benchmark gives each architecture its intended input modality, so performance differences can reflect both architecture and input representation. The controlled ablation supplies the same standardized relational-context tensor (N, 6, 16) and padding mask to the LSTM, continuous-input 1D-CNN, and Transformer. Scaling is fitted on valid training tokens only, padded positions are set to zero after scaling, the LSTM packs valid sequence lengths, the CNN uses mask-aware pooling, and the Transformer uses its key-padding mask. Checkpoint selection uses validation loss; the known-only calibration split and final test split remain separate.
 
-The validated 25-epoch pilot used 3 seeds × 4 held-out mechanisms per model per mode (72 fits total). Its shared-context means ± SD were: LSTM accuracy 0.968 ± 0.016 / novel AUROC 0.701 ± 0.209; CNN accuracy 0.970 ± 0.019 / AUROC 0.756 ± 0.167; Transformer accuracy 0.978 ± 0.010 / AUROC 0.806 ± 0.104. Novel recall at conformal alpha 0.05 was 0.229, 0.297 and 0.323 respectively (with large SDs). Best validation epochs for shared-input LSTM/CNN were near the 25-epoch cap, so a 60-epoch controlled run is being executed with validation-based selection. The new summary is `results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json`; the app prefers the 60-epoch report once available and falls back to the 25-epoch pilot. Both are synthetic results and do not establish real-claim model superiority.
+The completed 60-epoch run used 3 generator seeds × 4 held-out mechanisms (upcoding, unbundling, phantom billing, and collusion), with 36 fits in native mode and 36 in shared-context mode. Mean ± SD over 12 held-out mechanism/seed runs per architecture:
 
-## Controlled comparison results (25-epoch pilot)
+| Mode / model | Known accuracy | Known macro-F1 | Novel AUROC | Novel AP | Novel recall at α=0.05 | Known false-rejection |
+|---|---:|---:|---:|---:|---:|---:|
+| Native LSTM | 0.519 ± 0.098 | 0.376 ± 0.123 | 0.539 ± 0.130 | 0.061 ± 0.073 | 0.057 ± 0.108 | 0.051 ± 0.010 |
+| Shared LSTM | 0.979 ± 0.010 | 0.908 ± 0.054 | 0.721 ± 0.210 | 0.169 ± 0.105 | 0.250 ± 0.166 | 0.048 ± 0.019 |
+| Native CNN | 0.896 ± 0.016 | 0.379 ± 0.085 | 0.546 ± 0.136 | 0.055 ± 0.032 | 0.078 ± 0.100 | 0.053 ± 0.016 |
+| Shared CNN | 0.973 ± 0.016 | 0.865 ± 0.091 | 0.759 ± 0.171 | 0.188 ± 0.141 | 0.354 ± 0.325 | 0.054 ± 0.015 |
+| Native Transformer | 0.983 ± 0.009 | 0.926 ± 0.042 | 0.816 ± 0.090 | 0.174 ± 0.103 | 0.349 ± 0.228 | 0.061 ± 0.021 |
+| Shared Transformer | 0.983 ± 0.009 | 0.926 ± 0.042 | 0.816 ± 0.090 | 0.174 ± 0.103 | 0.349 ± 0.228 | 0.061 ± 0.021 |
 
-Across 12 fold/seed runs per architecture, with 3 seeds and 4 held-out mechanisms, the shared-context mode measured:
-- LSTM: accuracy 0.968 ± 0.016, macro-F1 0.865 ± 0.076, novel AUROC 0.701 ± 0.209, AP 0.152 ± 0.092, novel recall at alpha 0.05 = 0.229 ± 0.183.
-- 1D-CNN: accuracy 0.970 ± 0.019, macro-F1 0.860 ± 0.096, novel AUROC 0.756 ± 0.167, AP 0.185 ± 0.137, novel recall 0.297 ± 0.268.
-- Transformer: accuracy 0.978 ± 0.010, macro-F1 0.910 ± 0.046, novel AUROC 0.806 ± 0.104, AP 0.179 ± 0.134, novel recall 0.323 ± 0.254.
+The original native performance gap is substantially affected by modality. The Transformer is unchanged because its native input was already the shared-context tensor. This controlled experiment does not prove a statistically decisive model ranking: there are three generator seeds, novel recall has high variability, and the Transformer known false-rejection rate is slightly above the nominal 5%. Three shared-context LSTM fits and one CNN fit selected epoch 60, so additional convergence/early-stopping analysis remains useful. The experiment is synthetic-only.
 
-The controlled results suggest the original native accuracy gap was driven substantially by modality. They still show high variance and weak novel recall; the Transformer known false-rejection rate was 0.061 ± 0.025. The 60-epoch follow-up is separate, because the shared-context LSTM/CNN validation best epochs approached the cap. These metrics apply only to synthetic generated claims.
+The earlier 25-epoch controlled report is preserved at results/controlled_deep_model_comparison/controlled_comparison_summary.json; the current report is results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json, with per-mode JSON/CSV and selected checkpoints in their respective result directories.
 
 ## Metrics and exact interpretation
 

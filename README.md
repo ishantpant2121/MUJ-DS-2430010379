@@ -106,31 +106,29 @@ These are separate model baselines and a synthetic benchmark. The reported known
 
 ### Controlled architecture comparison using identical inputs
 
-The original native benchmark gives each model its natural input modality, so its scores confound architecture and modality. The controlled ablation gives LSTM, continuous-input 1D-CNN and Transformer the **same standardized relational-context tensor** and padding mask. Scaling is fitted on valid training tokens only, padding is zeroed after scaling, validation loss selects checkpoints, calibration is disjoint/known-only, and test data stay held out.
+The native benchmark gives each model its natural input modality, so it confounds architecture and modality. The controlled comparison gives LSTM, continuous-input 1D-CNN, and Transformer the **same standardized relational-context tensor and padding mask**. Scaling is fitted on valid training tokens only; padding is zeroed after transform; LSTM packs valid sequence lengths, CNN uses mask-aware pooling, and Transformer uses its key-padding mask. The completed 60-epoch follow-up is the primary controlled report; the 25-epoch pilot remains archived separately.
 
-The validated **25-epoch pilot** contains 72 fits in total (3 models × 4 held-out mechanisms × 3 seeds in each of native and shared-context modes; 36 runs per mode). Mean ± SD across 12 folds/seeds per architecture:
+**60-epoch run:** 72 fits total (3 models × 4 held-out mechanisms × 3 seeds in both native and shared-context modes; 36 per mode), 2,400 generated claims per seed, batch size 128. Means ± SD across 12 held-out mechanism/seed runs per architecture:
 
-| Model | Shared-input known accuracy | Shared-input macro-F1 | Shared-input novel AUROC | Shared-input novel AP | Novel recall at α=0.05 | Known false-rejection rate |
-|---|---:|---:|---:|---:|---:|---:|
-| LSTM | 0.968 ± 0.016 | 0.865 ± 0.076 | 0.701 ± 0.209 | 0.152 ± 0.092 | 0.229 ± 0.183 | 0.047 ± 0.012 |
-| 1D-CNN | 0.970 ± 0.019 | 0.860 ± 0.096 | 0.756 ± 0.167 | 0.185 ± 0.137 | 0.297 ± 0.268 | 0.044 ± 0.011 |
-| Transformer | 0.978 ± 0.010 | 0.910 ± 0.046 | 0.806 ± 0.104 | 0.179 ± 0.134 | 0.323 ± 0.254 | 0.061 ± 0.025 |
+| Model | Shared-input known accuracy | Shared-input macro-F1 | Shared-input novel AUROC | Shared-input novel AP | Novel recall at α=0.05 | Known false-rejection rate | Rare-severe benign false-rejection |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| LSTM | 0.979 ± 0.010 | 0.908 ± 0.054 | 0.721 ± 0.210 | 0.169 ± 0.105 | 0.250 ± 0.166 | 0.048 ± 0.019 | 0.033 ± 0.037 |
+| 1D-CNN | 0.973 ± 0.016 | 0.865 ± 0.091 | 0.759 ± 0.171 | 0.188 ± 0.141 | 0.354 ± 0.325 | 0.054 ± 0.015 | 0.035 ± 0.041 |
+| Transformer | 0.983 ± 0.009 | 0.926 ± 0.042 | 0.816 ± 0.090 | 0.174 ± 0.103 | 0.349 ± 0.228 | 0.061 ± 0.021 | 0.040 ± 0.040 |
 
-**What this says:** using the same input raised LSTM/CNN known-class performance substantially compared with native mode, supporting the conclusion that the earlier apparent gap mostly reflected input modality. The Transformer’s scores are identical in the two modes because its original input was already the shared context. Novel-mechanism recall is still low/variable and the Transformer’s known false-rejection rate is above nominal 5%. These are synthetic results, not real-claim performance, and three seeds do not establish a statistically decisive model ranking.
+Native versus shared-input known accuracy / novel AUROC: LSTM 0.519 ± 0.098 / 0.539 ± 0.130 versus 0.979 ± 0.010 / 0.721 ± 0.210; CNN 0.896 ± 0.016 / 0.546 ± 0.136 versus 0.973 ± 0.016 / 0.759 ± 0.171; Transformer 0.983 ± 0.009 / 0.816 ± 0.090 in both modes because its native input was already the shared context.
 
-The best shared-context checkpoints for LSTM and CNN were near the 25-epoch cap (mean best epochs 24.4 and 24.6), so the workflow is extending the controlled runs to **60 epochs** with validation-based checkpoint selection. It will publish `results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json` and commit the 60-epoch metrics and weights; the application prefers that report when available and falls back to the 25-epoch pilot.
+The results support a substantial input-modality effect in the native comparison. Novel-mechanism recall remains variable, and the Transformer’s known false-rejection rate is above nominal 5%. Three seeds do not prove a statistically decisive ranking. Checkpoint selection is validation-based; 3/12 shared-context LSTM folds and 1/12 CNN folds selected epoch 60, so those branches may need a wider training budget or early-stopping analysis. All data remain synthetic; these scores are not real insurance-claim validation.
 
-Reproduce the longer controlled comparison:
+[Exact 60-epoch report](results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json) · [Native results](results/controlled_deep_model_comparison/native_60ep/standalone_deep_model_metrics.json) · [Shared-input results](results/controlled_deep_model_comparison/shared_context_60ep/standalone_deep_model_metrics.json)
 
-```bash
+~~~bash
 python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 60 --batch-size 128 --seeds 42,43,44 --hidden all --input-mode native --output-dir results/controlled_deep_model_comparison/native_60ep
 python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 60 --batch-size 128 --seeds 42,43,44 --hidden all --input-mode shared_context --output-dir results/controlled_deep_model_comparison/shared_context_60ep
 python scripts/summarize_deep_comparison.py --native results/controlled_deep_model_comparison/native_60ep/standalone_deep_model_metrics.json --shared-context results/controlled_deep_model_comparison/shared_context_60ep/standalone_deep_model_metrics.json --output results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json
-```
+~~~
 
-The 25-epoch controlled comparison is also documented in `paper/main.tex` as a separate table; the earlier 5-epoch baseline table remains unchanged. The 60-epoch run will be summarized separately if its validation completes successfully.
-
-The native and controlled reports are both preserved. The full temporal heterogeneous graph encoder and real-claims evaluation are separate research gaps.
+The original 5-epoch native baseline and 25-epoch controlled pilot remain separate, traceable reports. The full temporal heterogeneous graph encoder and real-claims evaluation are still separate research gaps.
 
 ### Recorded standalone deep-model results
 

@@ -292,6 +292,7 @@ with tab_deep_models:
                 "novel_mechanism_average_precision",
                 "novel_recall_at_conformal_alpha_005",
                 "known_false_rejection_rate_at_conformal_alpha_005",
+                "rare_severe_benign_false_rejection_rate",
             }:
                 continue
             controlled_rows.append({
