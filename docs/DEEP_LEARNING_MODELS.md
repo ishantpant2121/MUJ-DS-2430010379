@@ -45,6 +45,15 @@ The native benchmark uses different modalities by design, which means its scores
 
 The validated 25-epoch pilot used 3 seeds × 4 held-out mechanisms per model per mode (72 fits total). Its shared-context means ± SD were: LSTM accuracy 0.968 ± 0.016 / novel AUROC 0.701 ± 0.209; CNN accuracy 0.970 ± 0.019 / AUROC 0.756 ± 0.167; Transformer accuracy 0.978 ± 0.010 / AUROC 0.806 ± 0.104. Novel recall at conformal alpha 0.05 was 0.229, 0.297 and 0.323 respectively (with large SDs). Best validation epochs for shared-input LSTM/CNN were near the 25-epoch cap, so a 60-epoch controlled run is being executed with validation-based selection. The new summary is `results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json`; the app prefers the 60-epoch report once available and falls back to the 25-epoch pilot. Both are synthetic results and do not establish real-claim model superiority.
 
+## Controlled comparison results (25-epoch pilot)
+
+Across 12 fold/seed runs per architecture, with 3 seeds and 4 held-out mechanisms, the shared-context mode measured:
+- LSTM: accuracy 0.968 ± 0.016, macro-F1 0.865 ± 0.076, novel AUROC 0.701 ± 0.209, AP 0.152 ± 0.092, novel recall at alpha 0.05 = 0.229 ± 0.183.
+- 1D-CNN: accuracy 0.970 ± 0.019, macro-F1 0.860 ± 0.096, novel AUROC 0.756 ± 0.167, AP 0.185 ± 0.137, novel recall 0.297 ± 0.268.
+- Transformer: accuracy 0.978 ± 0.010, macro-F1 0.910 ± 0.046, novel AUROC 0.806 ± 0.104, AP 0.179 ± 0.134, novel recall 0.323 ± 0.254.
+
+The controlled results suggest the original native accuracy gap was driven substantially by modality. They still show high variance and weak novel recall; the Transformer known false-rejection rate was 0.061 ± 0.025. The 60-epoch follow-up is separate, because the shared-context LSTM/CNN validation best epochs approached the cap. These metrics apply only to synthetic generated claims.
+
 ## Metrics and exact interpretation
 
 - **Known-class accuracy:** multiclass accuracy among test examples from classes seen during training; the withheld mechanism is excluded from this accuracy.
