@@ -4,7 +4,7 @@
 
 The new owerf_temporal_heterograph.py module adds an explicit typed-node temporal graph encoder using core PyTorch rather than requiring a compiled PyTorch-Geometric extension. The types are Claim, Beneficiary, Hospital, Doctor, Provider, Admission, Package and Diagnosis. Eight typed relation channels connect claims to these entity types, including separate provider and referral-target channels that share the Provider node namespace. The encoder uses relation-specific claim-to-entity projections, time features and recency weighting for historical messages, learned node-type embeddings, log-history-degree features, relation-specific entity-to-query transforms, attention over relation messages, and an open-set classifier plus heteroscedastic clinical-expectation head.
 
-The generated data schema supplies beneficiary, hospital, doctor, package and timestamp identifiers. To complete a stable seven-type graph with the current synthetic generator, Admission is represented by one synthetic admission node per claim and Diagnosis is a severity-bin proxy. These are explicit proxies, not true clinical admissions or ICD-10 diagnoses. Hidden labels, mechanism IDs and ring IDs are never graph features.
+The generated schema supplies provider, referral-target, hospital, doctor, beneficiary, package and timestamp identifiers. Admission is represented by one synthetic admission node per claim and Diagnosis is a severity-bin proxy. These are explicit proxies, not true clinical admissions or ICD-10 diagnoses. Hidden labels, mechanism IDs and ring IDs are never graph features.
 
 ## Leakage-control policy
 
