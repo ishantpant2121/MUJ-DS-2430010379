@@ -313,16 +313,17 @@ def _fit_one_model(
     seed: int,
     output_dir: Path,
     save_weights: bool,
+    input_mode: str = "native",
 ) -> dict[str, Any]:
     _set_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    prepared, preprocessing = _prepare_inputs(name, data, train_ids)
+    prepared, preprocessing = _prepare_inputs(name, data, train_ids, input_mode=input_mode)
     x = prepared["x"]
     pad_mask = prepared.get("padding_mask")
     model = _make_model(name, len(known_original), {
         "history": data["hist"].shape[-1],
         "context": data["ctx"].shape[-1],
-    }, device)
+    }, device, input_mode=input_mode)
 
     class_counts = np.bincount(y_mapped[train_ids], minlength=len(known_original)).astype(float)
     if np.any(class_counts == 0):
@@ -345,9 +346,9 @@ def _fit_one_model(
             if len(ids) < 8:
                 continue
             xb = torch.as_tensor(x[ids], device=device)
-            xb = xb.long() if name == "CNN1D" else xb.float()
+            xb = xb.long() if (name == "CNN1D" and input_mode == "native") else xb.float()
             yb = torch.as_tensor(y_mapped[ids], dtype=torch.long, device=device)
-            if name == "Transformer":
+            if input_mode == "shared_context" or name == "Transformer":
                 mask = torch.as_tensor(pad_mask[ids], dtype=torch.bool, device=device)
                 _, logits = model(xb, mask)
             else:
@@ -363,7 +364,7 @@ def _fit_one_model(
         if not losses:
             raise RuntimeError(f"No {name} training batches were processed.")
         train_loss_history.append(float(np.mean(losses)))
-        _, val_logits = _forward_batch(model, name, x, val_ids, device, pad_mask)
+        _, val_logits = _forward_batch(model, name, x, val_ids, device, pad_mask, input_mode=input_mode)
         val_loss = float(F.cross_entropy(
             torch.as_tensor(val_logits, dtype=torch.float32),
             torch.as_tensor(y_mapped[val_ids], dtype=torch.long),
@@ -376,10 +377,10 @@ def _fit_one_model(
     if best_state is None:
         raise RuntimeError(f"No valid {name} checkpoint was selected.")
     model.load_state_dict(best_state)
-    train_embeddings, train_logits = _forward_batch(model, name, x, train_ids, device, pad_mask)
-    val_embeddings, val_logits = _forward_batch(model, name, x, val_ids, device, pad_mask)
-    cal_embeddings, cal_logits = _forward_batch(model, name, x, cal_ids, device, pad_mask)
-    test_embeddings, test_logits = _forward_batch(model, name, x, test_ids, device, pad_mask)
+    train_embeddings, train_logits = _forward_batch(model, name, x, train_ids, device, pad_mask, input_mode=input_mode)
+    val_embeddings, val_logits = _forward_batch(model, name, x, val_ids, device, pad_mask, input_mode=input_mode)
+    cal_embeddings, cal_logits = _forward_batch(model, name, x, cal_ids, device, pad_mask, input_mode=input_mode)
+    test_embeddings, test_logits = _forward_batch(model, name, x, test_ids, device, pad_mask, input_mode=input_mode)
 
     train_y = y_mapped[train_ids]
     energy_val, energy_cal, energy_test = _energy(val_logits), _energy(cal_logits), _energy(test_logits)
