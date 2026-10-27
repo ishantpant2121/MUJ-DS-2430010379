@@ -60,7 +60,7 @@ jobs:
           retention-days: 30
 
   full-temporal-graph-benchmark:
-    if: github.event_name == 'workflow_dispatch' && inputs.full_benchmark == true
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.full_benchmark == true)
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
