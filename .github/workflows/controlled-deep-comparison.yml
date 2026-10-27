@@ -1,14 +1,7 @@
-name: Controlled deep-model comparison
+name: Controlled deep-model comparison (60 epochs)
 
 on:
   push:
-    branches: [main]
-    paths:
-      - "scripts/train_evaluate_deep_models.py"
-      - "scripts/summarize_deep_comparison.py"
-      - "tests/test_standalone_deep_models.py"
-      - ".github/workflows/controlled-deep-comparison.yml"
-  pull_request:
     branches: [main]
     paths:
       - "scripts/train_evaluate_deep_models.py"
@@ -47,30 +40,30 @@ jobs:
       - name: Train native-modality models on paired folds and seeds
         run: |
           python scripts/train_evaluate_deep_models.py \
-            --n-samples 2400 --epochs 25 --batch-size 128 \
+            --n-samples 2400 --epochs 60 --batch-size 128 \
             --seeds 42,43,44 --hidden all --input-mode native \
-            --output-dir results/controlled_deep_model_comparison/native_25ep
+            --output-dir results/controlled_deep_model_comparison/native_60ep
       - name: Train shared-input models on the same folds and seeds
         run: |
           python scripts/train_evaluate_deep_models.py \
-            --n-samples 2400 --epochs 25 --batch-size 128 \
+            --n-samples 2400 --epochs 60 --batch-size 128 \
             --seeds 42,43,44 --hidden all --input-mode shared_context \
-            --output-dir results/controlled_deep_model_comparison/shared_context_25ep
+            --output-dir results/controlled_deep_model_comparison/shared_context_60ep
       - name: Build and validate controlled comparison report
         run: |
           python scripts/summarize_deep_comparison.py \
-            --native results/controlled_deep_model_comparison/native_25ep/standalone_deep_model_metrics.json \
-            --shared-context results/controlled_deep_model_comparison/shared_context_25ep/standalone_deep_model_metrics.json \
-            --output results/controlled_deep_model_comparison/controlled_comparison_summary.json
+            --native results/controlled_deep_model_comparison/native_60ep/standalone_deep_model_metrics.json \
+            --shared-context results/controlled_deep_model_comparison/shared_context_60ep/standalone_deep_model_metrics.json \
+            --output results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json
           python - <<'PY'
           import json, math
           from pathlib import Path
           root = Path("results/controlled_deep_model_comparison")
-          report = json.loads((root / "controlled_comparison_summary.json").read_text())
+          report = json.loads((root / "controlled_comparison_summary_60ep.json").read_text())
           assert report["configuration"]["total_model_fits"] == 72
           assert report["configuration"]["runs_per_mode"] == 36
-          assert report["configuration"]["epochs"] == 25
-          for mode in ("native_25ep", "shared_context_25ep"):
+          assert report["configuration"]["epochs"] == 60
+          for mode in ("native_60ep", "shared_context_60ep"):
               data = json.loads((root / mode / "standalone_deep_model_metrics.json").read_text())
               assert len(data["runs"]) == 36
               for row in data["runs"]:
@@ -82,16 +75,14 @@ jobs:
           print(json.dumps(report["summary_rows"], indent=2))
           PY
       - name: Commit reproducible controlled-comparison metrics on main
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/controlled_deep_model_comparison/native_25ep/standalone_deep_model_metrics.json \
-            results/controlled_deep_model_comparison/native_25ep/standalone_deep_model_metrics.csv \
-            results/controlled_deep_model_comparison/shared_context_25ep/standalone_deep_model_metrics.json \
-            results/controlled_deep_model_comparison/shared_context_25ep/standalone_deep_model_metrics.csv \
-            results/controlled_deep_model_comparison/controlled_comparison_summary.json \
-            results/controlled_deep_model_comparison/controlled_comparison_summary.csv
+          git add results/controlled_deep_model_comparison/native_60ep/ \
+            results/controlled_deep_model_comparison/shared_context_60ep/ \
+            results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json \
+            results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.csv
           if git diff --cached --quiet; then
             echo "Controlled comparison metrics are unchanged."
             exit 0
@@ -106,13 +97,13 @@ jobs:
           done
           echo "Could not publish controlled comparison metrics after 5 attempts."
           exit 1
-      - name: Upload metrics and model checkpoints
+      - name: Upload 60-epoch metrics and model checkpoints
         uses: actions/upload-artifact@v4
         with:
-          name: controlled-deep-model-comparison-25-epoch
+          name: controlled-deep-model-comparison-60-epoch
           path: |
-            results/controlled_deep_model_comparison/native_25ep/
-            results/controlled_deep_model_comparison/shared_context_25ep/
-            results/controlled_deep_model_comparison/controlled_comparison_summary.json
-            results/controlled_deep_model_comparison/controlled_comparison_summary.csv
+            results/controlled_deep_model_comparison/native_60ep/
+            results/controlled_deep_model_comparison/shared_context_60ep/
+            results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json
+            results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.csv
           if-no-files-found: error
