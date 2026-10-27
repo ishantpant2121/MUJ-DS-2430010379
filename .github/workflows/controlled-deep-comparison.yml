@@ -1,0 +1,109 @@
+name: Controlled deep-model comparison
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/train_evaluate_deep_models.py"
+      - "scripts/summarize_deep_comparison.py"
+      - "tests/test_standalone_deep_models.py"
+      - ".github/workflows/controlled-deep-comparison.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/train_evaluate_deep_models.py"
+      - "scripts/summarize_deep_comparison.py"
+      - "tests/test_standalone_deep_models.py"
+      - ".github/workflows/controlled-deep-comparison.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  controlled-comparison:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Test model architectures, shared-input preprocessing, and decision gate
+        run: python -m pytest tests/test_standalone_deep_models.py tests/test_owerf_v02_benchmark.py -v
+      - name: Train native-modality models on paired folds and seeds
+        run: |
+          python scripts/train_evaluate_deep_models.py \
+            --n-samples 2400 --epochs 25 --batch-size 128 \
+            --seeds 42,43,44 --hidden all --input-mode native \
+            --output-dir results/controlled_deep_model_comparison/native_25ep
+      - name: Train shared-input models on the same folds and seeds
+        run: |
+          python scripts/train_evaluate_deep_models.py \
+            --n-samples 2400 --epochs 25 --batch-size 128 \
+            --seeds 42,43,44 --hidden all --input-mode shared_context \
+            --output-dir results/controlled_deep_model_comparison/shared_context_25ep
+      - name: Build and validate controlled comparison report
+        run: |
+          python scripts/summarize_deep_comparison.py \
+            --native results/controlled_deep_model_comparison/native_25ep/standalone_deep_model_metrics.json \
+            --shared-context results/controlled_deep_model_comparison/shared_context_25ep/standalone_deep_model_metrics.json \
+            --output results/controlled_deep_model_comparison/controlled_comparison_summary.json
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          root = Path("results/controlled_deep_model_comparison")
+          report = json.loads((root / "controlled_comparison_summary.json").read_text())
+          assert report["configuration"]["total_model_fits"] == 72
+          assert report["configuration"]["runs_per_mode"] == 36
+          assert report["configuration"]["epochs"] == 25
+          for mode in ("native_25ep", "shared_context_25ep"):
+              data = json.loads((root / mode / "standalone_deep_model_metrics.json").read_text())
+              assert len(data["runs"]) == 36
+              for row in data["runs"]:
+                  for key in ("known_class_accuracy", "known_class_macro_f1", "novel_mechanism_auroc",
+                              "novel_mechanism_average_precision", "novel_recall_at_conformal_alpha_005"):
+                      value = row[key]
+                      assert value is not None and math.isfinite(value) and 0 <= value <= 1, (mode, row["model"], row["hidden_mechanism"], key, value)
+          print("PASS: controlled comparison contains 72 finite model runs across paired folds and seeds.")
+          print(json.dumps(report["summary_rows"], indent=2))
+          PY
+      - name: Commit reproducible controlled-comparison metrics on main
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/controlled_deep_model_comparison/native_25ep/standalone_deep_model_metrics.json \
+            results/controlled_deep_model_comparison/native_25ep/standalone_deep_model_metrics.csv \
+            results/controlled_deep_model_comparison/shared_context_25ep/standalone_deep_model_metrics.json \
+            results/controlled_deep_model_comparison/shared_context_25ep/standalone_deep_model_metrics.csv \
+            results/controlled_deep_model_comparison/controlled_comparison_summary.json \
+            results/controlled_deep_model_comparison/controlled_comparison_summary.csv
+          git commit -m "results: record controlled deep-model architecture comparison"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            echo "Push raced with another main update (attempt $attempt); retrying after rebase."
+            sleep $((attempt * 2))
+          done
+          echo "Could not publish controlled comparison metrics after 5 attempts."
+          exit 1
+      - name: Upload metrics and model checkpoints
+        uses: actions/upload-artifact@v4
+        with:
+          name: controlled-deep-model-comparison-25-epoch
+          path: |
+            results/controlled_deep_model_comparison/native_25ep/
+            results/controlled_deep_model_comparison/shared_context_25ep/
+            results/controlled_deep_model_comparison/controlled_comparison_summary.json
+            results/controlled_deep_model_comparison/controlled_comparison_summary.csv
+          if-no-files-found: error
