@@ -436,9 +436,11 @@ def _fit_one_model(
     if save_weights:
         weights_dir = output_dir / "weights"
         weights_dir.mkdir(parents=True, exist_ok=True)
-        save_path = weights_dir / f"{name.lower()}_hidden_{MECHANISMS[hidden_id - 1]}_seed_{seed}.pt"
+        mode_prefix = "" if input_mode == "native" else f"{input_mode.lower()}_"
+        save_path = weights_dir / f"{mode_prefix}{name.lower()}_hidden_{MECHANISMS[hidden_id - 1]}_seed_{seed}.pt"
         checkpoint = {
             "model_name": name,
+            "input_mode": input_mode,
             "hidden_mechanism": MECHANISMS[hidden_id - 1],
             "known_original_labels": known_original,
             "state_dict": best_state,
@@ -448,6 +450,7 @@ def _fit_one_model(
                 "history_dim": int(data["hist"].shape[-1]),
                 "context_dim": int(data["ctx"].shape[-1]),
                 "code_vocab": int(CODE_VOCAB),
+                "input_mode": input_mode,
                 "best_epoch": best_epoch,
                 "seed": seed,
             },
@@ -460,6 +463,7 @@ def _fit_one_model(
 
     return {
         "model": name,
+        "input_mode": input_mode,
         "hidden_mechanism": MECHANISMS[hidden_id - 1],
         "seed": seed,
         "model_seed": seed,
@@ -502,7 +506,10 @@ def run_benchmark(
     output_dir: str = "results/standalone_deep_models",
     save_weights: bool = True,
     hidden_mechanisms: tuple[str, ...] = MECHANISMS,
+    input_mode: str = "native",
 ) -> dict[str, Any]:
+    if input_mode not in {"native", "shared_context"}:
+        raise ValueError("input_mode must be 'native' or 'shared_context'.")
     if n_samples < 1000:
         raise ValueError("Use at least 1000 claims for stable split coverage.")
     if epochs < 1 or batch_size < 8:
@@ -559,6 +566,7 @@ def run_benchmark(
                     seed=model_seed,
                     output_dir=output,
                     save_weights=save_weights,
+                    input_mode=input_mode,
                 )
                 result["data_seed"] = seed
                 result["train_validation_calibration_protocol"] = "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
