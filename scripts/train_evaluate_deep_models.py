@@ -594,7 +594,13 @@ def run_benchmark(
     report = {
         "experiment": "standalone LSTM vs 1D-CNN vs Transformer under leave-one-mechanism-out",
         "scope": "synthetic data only; no real patient or insurance claim data",
-        "purpose": "separately train and evaluate each architecture on the same multimodal synthetic benchmark",
+        "purpose": "separately train and evaluate each architecture on the same synthetic benchmark",
+        "input_mode": input_mode,
+        "comparison_design": (
+            "native mode: architecture and input modality vary together"
+            if input_mode == "native"
+            else "controlled mode: all architectures receive the same standardized context tensor and padding mask"
+        ),
         "metrics_semantics": {
             "known_class_accuracy": "multiclass accuracy on test claims from classes seen during training; held-out mechanism excluded from this metric",
             "novel_mechanism_auroc": "held-out fraud mechanism positive vs every non-held-out test claim, using fused energy/Mahalanobis novelty",
@@ -608,6 +614,7 @@ def run_benchmark(
             "seeds": list(seeds),
             "hidden_mechanisms": list(hidden_mechanisms),
             "models": list(MODEL_NAMES),
+            "input_mode": input_mode,
             "alpha": ALPHA,
         },
         "split_protocol": "same generator seed and stratified train/calibration/test partition across model architectures; hidden mechanism excluded from train, validation and calibration",
@@ -616,7 +623,8 @@ def run_benchmark(
         "limitations": [
             "Synthetic generator contains designed proxies for each mechanism; metrics measure performance on this generator only.",
             "A held-out mechanism is evaluated as novelty; it is not a separately supervised output class.",
-            "The three architectures are trained independently, not as the same fused encoder, so the comparison isolates their input modality/architecture choices but modalities differ as intended by the paper.",
+            "The three architectures are trained independently, not as the same fused encoder.",
+            "Native mode varies input modality; shared_context mode supplies identical standardized context tokens and a padding mask to all three architectures.",
             "Temporal graph encoder and public provider-level benchmark are separate experiments and not combined into this standalone comparison.",
             "Three seeds provide an initial stability check, not publication-grade confidence intervals; complete the registered seed/ablation plan before submission.",
         ],
@@ -627,7 +635,7 @@ def run_benchmark(
     # Compact CSV with one row per architecture / held-out mechanism / seed.
     import csv
     fieldnames = [
-        "model", "hidden_mechanism", "data_seed", "best_epoch",
+        "model", "input_mode", "hidden_mechanism", "data_seed", "best_epoch",
         "known_class_accuracy", "known_class_macro_f1", "known_class_balanced_accuracy",
         "known_test_fraud_vs_benign_metrics", "novel_mechanism_auroc",
         "novel_mechanism_average_precision", "false_positive_rate_at_95pct_novel_recall",
@@ -649,6 +657,8 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--seeds", default="42,43,44", help="comma-separated generator seeds")
     parser.add_argument("--hidden", default="all", help="one mechanism, comma-separated mechanisms, or 'all'")
+    parser.add_argument("--input-mode", choices=("native", "shared_context"), default="native",
+                        help="native uses model-specific modalities; shared_context controls the input across architectures")
     parser.add_argument("--output-dir", default="results/standalone_deep_models")
     parser.add_argument("--no-save-weights", action="store_true")
     args = parser.parse_args()
@@ -657,7 +667,7 @@ def main() -> None:
     report = run_benchmark(
         n_samples=args.n_samples, epochs=args.epochs, batch_size=args.batch_size,
         seeds=seeds, output_dir=args.output_dir, save_weights=not args.no_save_weights,
-        hidden_mechanisms=hidden,
+        hidden_mechanisms=hidden, input_mode=args.input_mode,
     )
     print(json.dumps({"summary_by_model": report["summary_by_model"], "report_path": str(Path(args.output_dir) / "standalone_deep_model_metrics.json")}, indent=2))
 
