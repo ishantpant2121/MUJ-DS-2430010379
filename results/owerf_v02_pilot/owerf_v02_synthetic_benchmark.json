@@ -141,7 +141,7 @@
             "top_provider_share": 0.16666666666666666,
             "mean_clinical_inconsistency": 0.930353581905365,
             "mean_structural_deviation": 10.421199026897298,
-            "mean_audit_priority": 0.7748679218876059,
+            "mean_audit_priority": 0.7748679271265528,
             "top_deviant_observable_features": [
               {
                 "feature": "organ_support",
