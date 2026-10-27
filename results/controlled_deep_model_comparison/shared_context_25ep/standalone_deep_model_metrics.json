@@ -1,0 +1,3178 @@
+{
+  "experiment": "standalone LSTM vs 1D-CNN vs Transformer under leave-one-mechanism-out",
+  "scope": "synthetic data only; no real patient or insurance claim data",
+  "purpose": "separately train and evaluate each architecture on the same synthetic benchmark",
+  "input_mode": "shared_context",
+  "comparison_design": "controlled mode: all architectures receive the same standardized context tensor and padding mask",
+  "metrics_semantics": {
+    "known_class_accuracy": "multiclass accuracy on test claims from classes seen during training; held-out mechanism excluded from this metric",
+    "novel_mechanism_auroc": "held-out fraud mechanism positive vs every non-held-out test claim, using fused energy/Mahalanobis novelty",
+    "novel_recall_at_conformal_alpha_005": "fraction of held-out mechanism claims rejected by the calibration-set conformal p-value rule at alpha=0.05",
+    "rare_severe_benign_false_rejection_rate": "fraction of rare-severe legitimate test claims rejected by the same novelty gate"
+  },
+  "configuration": {
+    "n_samples_per_dataset_seed": 2400,
+    "epochs": 25,
+    "batch_size": 128,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "hidden_mechanisms": [
+      "upcoding",
+      "unbundling",
+      "phantom_billing",
+      "collusion"
+    ],
+    "models": [
+      "LSTM",
+      "CNN1D",
+      "Transformer"
+    ],
+    "input_mode": "shared_context",
+    "alpha": 0.05
+  },
+  "split_protocol": "same generator seed and stratified train/calibration/test partition across model architectures; hidden mechanism excluded from train, validation and calibration",
+  "summary_by_model": {
+    "LSTM": {
+      "known_class_accuracy": {
+        "mean": 0.9680437853107344,
+        "std": 0.01647195959476146,
+        "n_runs": 12
+      },
+      "known_class_macro_f1": {
+        "mean": 0.8651999837686142,
+        "std": 0.0760081331360977,
+        "n_runs": 12
+      },
+      "known_class_balanced_accuracy": {
+        "mean": 0.8795941430817611,
+        "std": 0.07017629338576475,
+        "n_runs": 12
+      },
+      "novel_mechanism_auroc": {
+        "mean": 0.7007249735169491,
+        "std": 0.2086480422305946,
+        "n_runs": 12
+      },
+      "novel_mechanism_average_precision": {
+        "mean": 0.1522679537667601,
+        "std": 0.09179160709048813,
+        "n_runs": 12
+      },
+      "false_positive_rate_at_95pct_novel_recall": {
+        "mean": 0.7012711864406779,
+        "std": 0.3229184085926784,
+        "n_runs": 12
+      },
+      "novel_recall_at_conformal_alpha_005": {
+        "mean": 0.22916666666666666,
+        "std": 0.18335055015577195,
+        "n_runs": 12
+      },
+      "known_false_rejection_rate_at_conformal_alpha_005": {
+        "mean": 0.04713983050847457,
+        "std": 0.01235783986617827,
+        "n_runs": 12
+      },
+      "rare_severe_benign_false_rejection_rate": {
+        "mean": 0.05100069013112491,
+        "std": 0.02913239291982963,
+        "n_runs": 12
+      }
+    },
+    "CNN1D": {
+      "known_class_accuracy": {
+        "mean": 0.9701624293785311,
+        "std": 0.018830017452200656,
+        "n_runs": 12
+      },
+      "known_class_macro_f1": {
+        "mean": 0.8602244183888071,
+        "std": 0.09620215718194018,
+        "n_runs": 12
+      },
+      "known_class_balanced_accuracy": {
+        "mean": 0.8501130110062892,
+        "std": 0.0959510460022486,
+        "n_runs": 12
+      },
+      "novel_mechanism_auroc": {
+        "mean": 0.7556276483050848,
+        "std": 0.1674289298892666,
+        "n_runs": 12
+      },
+      "novel_mechanism_average_precision": {
+        "mean": 0.18539339433317714,
+        "std": 0.1373183467522899,
+        "n_runs": 12
+      },
+      "false_positive_rate_at_95pct_novel_recall": {
+        "mean": 0.6682556497175142,
+        "std": 0.29195172198218844,
+        "n_runs": 12
+      },
+      "novel_recall_at_conformal_alpha_005": {
+        "mean": 0.296875,
+        "std": 0.2679957704042089,
+        "n_runs": 12
+      },
+      "known_false_rejection_rate_at_conformal_alpha_005": {
+        "mean": 0.04360875706214689,
+        "std": 0.011227480999706673,
+        "n_runs": 12
+      },
+      "rare_severe_benign_false_rejection_rate": {
+        "mean": 0.04182194616977225,
+        "std": 0.05209827242253119,
+        "n_runs": 12
+      }
+    },
+    "Transformer": {
+      "known_class_accuracy": {
+        "mean": 0.9781073446327685,
+        "std": 0.010352950562558442,
+        "n_runs": 12
+      },
+      "known_class_macro_f1": {
+        "mean": 0.9103717685834987,
+        "std": 0.045587364438961,
+        "n_runs": 12
+      },
+      "known_class_balanced_accuracy": {
+        "mean": 0.9300068789308176,
+        "std": 0.04097915117560325,
+        "n_runs": 12
+      },
+      "novel_mechanism_auroc": {
+        "mean": 0.8055537164548022,
+        "std": 0.10360120541250754,
+        "n_runs": 12
+      },
+      "novel_mechanism_average_precision": {
+        "mean": 0.17862976352530743,
+        "std": 0.13431461325397126,
+        "n_runs": 12
+      },
+      "false_positive_rate_at_95pct_novel_recall": {
+        "mean": 0.5757415254237289,
+        "std": 0.2750265670890535,
+        "n_runs": 12
+      },
+      "novel_recall_at_conformal_alpha_005": {
+        "mean": 0.3229166666666667,
+        "std": 0.25399273730967314,
+        "n_runs": 12
+      },
+      "known_false_rejection_rate_at_conformal_alpha_005": {
+        "mean": 0.06108757062146892,
+        "std": 0.02462194452450997,
+        "n_runs": 12
+      },
+      "rare_severe_benign_false_rejection_rate": {
+        "mean": 0.03750862663906142,
+        "std": 0.0314865471625297,
+        "n_runs": 12
+      }
+    }
+  },
+  "runs": [
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "upcoding",
+      "seed": 142,
+      "model_seed": 142,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.2265182435512543,
+      "train_loss_best_epoch": 0.014490219950675964,
+      "validation_cross_entropy_at_best_epoch": 0.04896485060453415,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9788135593220338,
+      "known_class_macro_f1": 0.9114150046739465,
+      "known_class_balanced_accuracy": 0.8888561320754718,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9836448598130841,
+          "recall": 0.9929245283018868,
+          "f1-score": 0.9882629107981221,
+          "support": 424.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 0.9375,
+          "f1-score": 0.967741935483871,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.7692307692307693,
+          "recall": 0.625,
+          "f1-score": 0.6896551724137931,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9788135593220338,
+        "macro avg": {
+          "precision": 0.9382189072609634,
+          "recall": 0.8888561320754718,
+          "f1-score": 0.9114150046739465,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9774854086195762,
+          "recall": 0.9788135593220338,
+          "f1-score": 0.9778428557304374,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9788135593220338,
+        "precision": 0.9318181818181818,
+        "recall": 0.8541666666666666,
+        "f1": 0.8913043478260869
+      },
+      "novel_mechanism_auroc": 0.8884401483050848,
+      "novel_mechanism_average_precision": 0.2569032537693478,
+      "false_positive_rate_at_95pct_novel_recall": 0.3983050847457627,
+      "novel_recall_at_conformal_alpha_005": 0.375,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.0423728813559322,
+      "rare_severe_benign_false_rejection_rate": 0.08695652173913043,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.12
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_upcoding_seed_142.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "upcoding",
+      "seed": 142,
+      "model_seed": 142,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.1924123167991638,
+      "train_loss_best_epoch": 0.015873028431087732,
+      "validation_cross_entropy_at_best_epoch": 0.03444625809788704,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9915254237288136,
+      "known_class_macro_f1": 0.9654901960784313,
+      "known_class_balanced_accuracy": 0.9525353773584906,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9929577464788732,
+          "recall": 0.9976415094339622,
+          "f1-score": 0.9952941176470588,
+          "support": 424.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.9285714285714286,
+          "recall": 0.8125,
+          "f1-score": 0.8666666666666667,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9915254237288136,
+        "macro avg": {
+          "precision": 0.9803822937625755,
+          "recall": 0.9525353773584906,
+          "f1-score": 0.9654901960784313,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9912526003478498,
+          "recall": 0.9915254237288136,
+          "f1-score": 0.9912529079428382,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9915254237288136,
+        "precision": 0.9782608695652174,
+        "recall": 0.9375,
+        "f1": 0.9574468085106383
+      },
+      "novel_mechanism_auroc": 0.9603416313559323,
+      "novel_mechanism_average_precision": 0.35026974109373965,
+      "false_positive_rate_at_95pct_novel_recall": 0.12076271186440678,
+      "novel_recall_at_conformal_alpha_005": 0.8125,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.07203389830508475,
+      "rare_severe_benign_false_rejection_rate": 0.13043478260869565,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.16
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_upcoding_seed_142.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "upcoding",
+      "seed": 142,
+      "model_seed": 142,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 21,
+      "train_loss_first_epoch": 1.3025442361831665,
+      "train_loss_best_epoch": 0.0121608124114573,
+      "validation_cross_entropy_at_best_epoch": 0.008749020285904408,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.989406779661017,
+      "known_class_macro_f1": 0.9596984454939,
+      "known_class_balanced_accuracy": 0.9669811320754718,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9952718676122931,
+          "recall": 0.9929245283018868,
+          "f1-score": 0.9940968122786304,
+          "support": 424.0
+        },
+        "unbundling": {
+          "precision": 0.9411764705882353,
+          "recall": 1.0,
+          "f1-score": 0.9696969696969697,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.875,
+          "recall": 0.875,
+          "f1-score": 0.875,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.989406779661017,
+        "macro avg": {
+          "precision": 0.9528620845501321,
+          "recall": 0.9669811320754718,
+          "f1-score": 0.9596984454939,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9895213885530171,
+          "recall": 0.989406779661017,
+          "f1-score": 0.9894326269518873,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.989406779661017,
+        "precision": 0.9387755102040817,
+        "recall": 0.9583333333333334,
+        "f1": 0.9484536082474226
+      },
+      "novel_mechanism_auroc": 0.8373278601694916,
+      "novel_mechanism_average_precision": 0.23984996189483096,
+      "false_positive_rate_at_95pct_novel_recall": 0.6758474576271186,
+      "novel_recall_at_conformal_alpha_005": 0.75,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.0826271186440678,
+      "rare_severe_benign_false_rejection_rate": 0.043478260869565216,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.12
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_upcoding_seed_142.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "unbundling",
+      "seed": 242,
+      "model_seed": 242,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.243376111984253,
+      "train_loss_best_epoch": 0.08441291712224483,
+      "validation_cross_entropy_at_best_epoch": 0.10852733254432678,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.951271186440678,
+      "known_class_macro_f1": 0.8048397182727751,
+      "known_class_balanced_accuracy": 0.8210495283018868,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9809523809523809,
+          "recall": 0.9716981132075472,
+          "f1-score": 0.976303317535545,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.5,
+          "recall": 0.625,
+          "f1-score": 0.5555555555555556,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.6875,
+          "recall": 0.6875,
+          "f1-score": 0.6875,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.951271186440678,
+        "macro avg": {
+          "precision": 0.7921130952380953,
+          "recall": 0.8210495283018868,
+          "f1-score": 0.8048397182727751,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9553470540758676,
+          "recall": 0.951271186440678,
+          "f1-score": 0.9530540159405932,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9576271186440678,
+        "precision": 0.7692307692307693,
+        "recall": 0.8333333333333334,
+        "f1": 0.8
+      },
+      "novel_mechanism_auroc": 0.34580243644067793,
+      "novel_mechanism_average_precision": 0.024423081786549415,
+      "false_positive_rate_at_95pct_novel_recall": 0.9576271186440678,
+      "novel_recall_at_conformal_alpha_005": 0.0,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.057203389830508475,
+      "rare_severe_benign_false_rejection_rate": 0.043478260869565216,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.0
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_unbundling_seed_242.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "unbundling",
+      "seed": 242,
+      "model_seed": 242,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.3277286410331726,
+      "train_loss_best_epoch": 0.06438699811697006,
+      "validation_cross_entropy_at_best_epoch": 0.10865254700183868,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9533898305084746,
+      "known_class_macro_f1": 0.7632235701506852,
+      "known_class_balanced_accuracy": 0.761497641509434,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9834905660377359,
+          "recall": 0.9834905660377359,
+          "f1-score": 0.9834905660377359,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.4117647058823529,
+          "recall": 0.4375,
+          "f1-score": 0.42424242424242425,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.6666666666666666,
+          "recall": 0.625,
+          "f1-score": 0.6451612903225806,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9533898305084746,
+        "macro avg": {
+          "precision": 0.7654804846466888,
+          "recall": 0.761497641509434,
+          "f1-score": 0.7632235701506852,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.95392987703556,
+          "recall": 0.9533898305084746,
+          "f1-score": 0.9536238547310172,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9703389830508474,
+        "precision": 0.8541666666666666,
+        "recall": 0.8541666666666666,
+        "f1": 0.8541666666666666
+      },
+      "novel_mechanism_auroc": 0.592823093220339,
+      "novel_mechanism_average_precision": 0.0735496228740083,
+      "false_positive_rate_at_95pct_novel_recall": 0.923728813559322,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.05084745762711865,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.04
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_unbundling_seed_242.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "unbundling",
+      "seed": 242,
+      "model_seed": 242,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 20,
+      "train_loss_first_epoch": 1.0686170935630799,
+      "train_loss_best_epoch": 0.10222253166139125,
+      "validation_cross_entropy_at_best_epoch": 0.07090284675359726,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9682203389830508,
+      "known_class_macro_f1": 0.8950923628342984,
+      "known_class_balanced_accuracy": 0.9610849056603774,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9951573849878934,
+          "recall": 0.9693396226415094,
+          "f1-score": 0.982078853046595,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.7,
+          "recall": 0.875,
+          "f1-score": 0.7777777777777778,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.6956521739130435,
+          "recall": 1.0,
+          "f1-score": 0.8205128205128205,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9682203389830508,
+        "macro avg": {
+          "precision": 0.8477023897252343,
+          "recall": 0.9610849056603774,
+          "f1-score": 0.8950923628342984,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.97516348732516,
+          "recall": 0.9682203389830508,
+          "f1-score": 0.9702840747127243,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9682203389830508,
+        "precision": 0.7796610169491526,
+        "recall": 0.9583333333333334,
+        "f1": 0.8598130841121495
+      },
+      "novel_mechanism_auroc": 0.6563824152542372,
+      "novel_mechanism_average_precision": 0.0572345050711032,
+      "false_positive_rate_at_95pct_novel_recall": 0.8707627118644068,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.07203389830508475,
+      "rare_severe_benign_false_rejection_rate": 0.043478260869565216,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.04
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_unbundling_seed_242.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "phantom_billing",
+      "seed": 342,
+      "model_seed": 342,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.25998398065567,
+      "train_loss_best_epoch": 0.031811575032770635,
+      "validation_cross_entropy_at_best_epoch": 0.09192010015249252,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9851694915254238,
+      "known_class_macro_f1": 0.9414871385690946,
+      "known_class_balanced_accuracy": 0.9357311320754718,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9905882352941177,
+          "recall": 0.9929245283018868,
+          "f1-score": 0.9917550058892816,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.8,
+          "recall": 0.75,
+          "f1-score": 0.7741935483870968,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9851694915254238,
+        "macro avg": {
+          "precision": 0.9476470588235294,
+          "recall": 0.9357311320754718,
+          "f1-score": 0.9414871385690946,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.984765702891326,
+          "recall": 0.9851694915254238,
+          "f1-score": 0.9849390238797647,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9851694915254238,
+        "precision": 0.9361702127659575,
+        "recall": 0.9166666666666666,
+        "f1": 0.9263157894736842
+      },
+      "novel_mechanism_auroc": 0.7212658898305084,
+      "novel_mechanism_average_precision": 0.10558508515832199,
+      "false_positive_rate_at_95pct_novel_recall": 0.8940677966101694,
+      "novel_recall_at_conformal_alpha_005": 0.1875,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.038135593220338986,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.09
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_phantom_billing_seed_342.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "phantom_billing",
+      "seed": 342,
+      "model_seed": 342,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.2179693102836608,
+      "train_loss_best_epoch": 0.034547058120369914,
+      "validation_cross_entropy_at_best_epoch": 0.07979518920183182,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9745762711864406,
+      "known_class_macro_f1": 0.9027122641509434,
+      "known_class_balanced_accuracy": 0.9027122641509434,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9858490566037735,
+          "recall": 0.9858490566037735,
+          "f1-score": 0.9858490566037735,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.625,
+          "recall": 0.625,
+          "f1-score": 0.625,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9745762711864406,
+        "macro avg": {
+          "precision": 0.9027122641509434,
+          "recall": 0.9027122641509434,
+          "f1-score": 0.9027122641509434,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9745762711864406,
+          "recall": 0.9745762711864406,
+          "f1-score": 0.9745762711864406,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9745762711864406,
+        "precision": 0.875,
+        "recall": 0.875,
+        "f1": 0.875
+      },
+      "novel_mechanism_auroc": 0.610301906779661,
+      "novel_mechanism_average_precision": 0.07300643629865944,
+      "false_positive_rate_at_95pct_novel_recall": 0.923728813559322,
+      "novel_recall_at_conformal_alpha_005": 0.125,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.03389830508474576,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.06
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_phantom_billing_seed_342.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "phantom_billing",
+      "seed": 342,
+      "model_seed": 342,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.2732401132583617,
+      "train_loss_best_epoch": 0.01920447461307049,
+      "validation_cross_entropy_at_best_epoch": 0.07412732392549515,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9830508474576272,
+      "known_class_macro_f1": 0.9360550514532053,
+      "known_class_balanced_accuracy": 0.9501768867924528,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9928909952606635,
+          "recall": 0.9882075471698113,
+          "f1-score": 0.9905437352245863,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.8125,
+          "recall": 0.8125,
+          "f1-score": 0.8125,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 0.8888888888888888,
+          "recall": 1.0,
+          "f1-score": 0.9411764705882353,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9830508474576272,
+        "macro avg": {
+          "precision": 0.9235699710373881,
+          "recall": 0.9501768867924528,
+          "f1-score": 0.9360550514532053,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9834915343490329,
+          "recall": 0.9830508474576272,
+          "f1-score": 0.9831554391199924,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9830508474576272,
+        "precision": 0.9,
+        "recall": 0.9375,
+        "f1": 0.9183673469387755
+      },
+      "novel_mechanism_auroc": 0.6565148305084746,
+      "novel_mechanism_average_precision": 0.07924824624218016,
+      "false_positive_rate_at_95pct_novel_recall": 0.711864406779661,
+      "novel_recall_at_conformal_alpha_005": 0.3125,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.07838983050847458,
+      "rare_severe_benign_false_rejection_rate": 0.043478260869565216,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.06
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_phantom_billing_seed_342.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "collusion",
+      "seed": 442,
+      "model_seed": 442,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.4765239000320434,
+      "train_loss_best_epoch": 0.08086501806974411,
+      "validation_cross_entropy_at_best_epoch": 0.18011786043643951,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9533898305084746,
+      "known_class_macro_f1": 0.8129794129304516,
+      "known_class_balanced_accuracy": 0.8517099056603774,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9856115107913669,
+          "recall": 0.9693396226415094,
+          "f1-score": 0.9774078478002378,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.5384615384615384,
+          "recall": 0.875,
+          "f1-score": 0.6666666666666666,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 0.8888888888888888,
+          "recall": 1.0,
+          "f1-score": 0.9411764705882353,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.8181818181818182,
+          "recall": 0.5625,
+          "f1-score": 0.6666666666666666,
+          "support": 16.0
+        },
+        "accuracy": 0.9533898305084746,
+        "macro avg": {
+          "precision": 0.8077859390809031,
+          "recall": 0.8517099056603774,
+          "f1-score": 0.8129794129304516,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9614995688645243,
+          "recall": 0.9533898305084746,
+          "f1-score": 0.9551124668009449,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9597457627118644,
+        "precision": 0.7636363636363637,
+        "recall": 0.875,
+        "f1": 0.8155339805825242
+      },
+      "novel_mechanism_auroc": 0.939353813559322,
+      "novel_mechanism_average_precision": 0.240336202091446,
+      "false_positive_rate_at_95pct_novel_recall": 0.1461864406779661,
+      "novel_recall_at_conformal_alpha_005": 0.375,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.036016949152542374,
+      "rare_severe_benign_false_rejection_rate": 0.043478260869565216,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.16
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_collusion_seed_442.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "collusion",
+      "seed": 442,
+      "model_seed": 442,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.473463761806488,
+      "train_loss_best_epoch": 0.06687330268323421,
+      "validation_cross_entropy_at_best_epoch": 0.11433149129152298,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9576271186440678,
+      "known_class_macro_f1": 0.8162671314079764,
+      "known_class_balanced_accuracy": 0.792747641509434,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9742990654205608,
+          "recall": 0.9834905660377359,
+          "f1-score": 0.9788732394366197,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.5294117647058824,
+          "recall": 0.5625,
+          "f1-score": 0.5454545454545454,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.9090909090909091,
+          "recall": 0.625,
+          "f1-score": 0.7407407407407407,
+          "support": 16.0
+        },
+        "accuracy": 0.9576271186440678,
+        "macro avg": {
+          "precision": 0.853200434804338,
+          "recall": 0.792747641509434,
+          "f1-score": 0.8162671314079764,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9578789121166663,
+          "recall": 0.9576271186440678,
+          "f1-score": 0.9568249536022275,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.961864406779661,
+        "precision": 0.8409090909090909,
+        "recall": 0.7708333333333334,
+        "f1": 0.8043478260869565
+      },
+      "novel_mechanism_auroc": 0.861228813559322,
+      "novel_mechanism_average_precision": 0.10922311831661602,
+      "false_positive_rate_at_95pct_novel_recall": 0.2669491525423729,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.04025423728813559,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.13
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_collusion_seed_442.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "collusion",
+      "seed": 442,
+      "model_seed": 442,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 23,
+      "train_loss_first_epoch": 1.5218660712242127,
+      "train_loss_best_epoch": 0.07060585767030716,
+      "validation_cross_entropy_at_best_epoch": 0.09097765386104584,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9661016949152542,
+      "known_class_macro_f1": 0.8694375194270527,
+      "known_class_balanced_accuracy": 0.9003537735849056,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9880668257756563,
+          "recall": 0.9764150943396226,
+          "f1-score": 0.9822064056939501,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.6666666666666666,
+          "recall": 0.75,
+          "f1-score": 0.7058823529411765,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 0.8888888888888888,
+          "recall": 1.0,
+          "f1-score": 0.9411764705882353,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.8235294117647058,
+          "recall": 0.875,
+          "f1-score": 0.8484848484848485,
+          "support": 16.0
+        },
+        "accuracy": 0.9661016949152542,
+        "macro avg": {
+          "precision": 0.8417879482739794,
+          "recall": 0.9003537735849056,
+          "f1-score": 0.8694375194270527,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9682324017076324,
+          "recall": 0.9661016949152542,
+          "f1-score": 0.9669157092509809,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9682203389830508,
+        "precision": 0.8113207547169812,
+        "recall": 0.8958333333333334,
+        "f1": 0.8514851485148515
+      },
+      "novel_mechanism_auroc": 0.838916843220339,
+      "novel_mechanism_average_precision": 0.09308784124675822,
+      "false_positive_rate_at_95pct_novel_recall": 0.3177966101694915,
+      "novel_recall_at_conformal_alpha_005": 0.1875,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.11864406779661017,
+      "rare_severe_benign_false_rejection_rate": 0.043478260869565216,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.13
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_collusion_seed_442.pt",
+      "data_seed": 42,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "upcoding",
+      "seed": 143,
+      "model_seed": 143,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.2851868152618409,
+      "train_loss_best_epoch": 0.015246352273970842,
+      "validation_cross_entropy_at_best_epoch": 0.03364276513457298,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9851694915254238,
+      "known_class_macro_f1": 0.9479289940828403,
+      "known_class_balanced_accuracy": 0.9658018867924528,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.995249406175772,
+          "recall": 0.9882075471698113,
+          "f1-score": 0.991715976331361,
+          "support": 424.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.7368421052631579,
+          "recall": 0.875,
+          "f1-score": 0.8,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9851694915254238,
+        "macro avg": {
+          "precision": 0.9330228778597325,
+          "recall": 0.9658018867924528,
+          "f1-score": 0.9479289940828403,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9868119108108853,
+          "recall": 0.9851694915254238,
+          "f1-score": 0.9857787583993582,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9851694915254238,
+        "precision": 0.9019607843137255,
+        "recall": 0.9583333333333334,
+        "f1": 0.9292929292929293
+      },
+      "novel_mechanism_auroc": 0.8640757415254237,
+      "novel_mechanism_average_precision": 0.28475093880804786,
+      "false_positive_rate_at_95pct_novel_recall": 0.8072033898305084,
+      "novel_recall_at_conformal_alpha_005": 0.375,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.05296610169491525,
+      "rare_severe_benign_false_rejection_rate": 0.047619047619047616,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.13
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_upcoding_seed_143.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "upcoding",
+      "seed": 143,
+      "model_seed": 143,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.1920963883399964,
+      "train_loss_best_epoch": 0.014712156401947141,
+      "validation_cross_entropy_at_best_epoch": 0.00808520708233118,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9915254237288136,
+      "known_class_macro_f1": 0.9631120053655265,
+      "known_class_balanced_accuracy": 0.9375,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9906542056074766,
+          "recall": 1.0,
+          "f1-score": 0.9953051643192489,
+          "support": 424.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 1.0,
+          "recall": 0.75,
+          "f1-score": 0.8571428571428571,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9915254237288136,
+        "macro avg": {
+          "precision": 0.9976635514018691,
+          "recall": 0.9375,
+          "f1-score": 0.9631120053655265,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9916046253762079,
+          "recall": 0.9915254237288136,
+          "f1-score": 0.990939990223829,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9915254237288136,
+        "precision": 1.0,
+        "recall": 0.9166666666666666,
+        "f1": 0.9565217391304348
+      },
+      "novel_mechanism_auroc": 0.8500397245762712,
+      "novel_mechanism_average_precision": 0.40655134785484404,
+      "false_positive_rate_at_95pct_novel_recall": 0.9300847457627118,
+      "novel_recall_at_conformal_alpha_005": 0.625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.038135593220338986,
+      "rare_severe_benign_false_rejection_rate": 0.047619047619047616,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.13
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_upcoding_seed_143.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "upcoding",
+      "seed": 143,
+      "model_seed": 143,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 22,
+      "train_loss_first_epoch": 1.2069457352161408,
+      "train_loss_best_epoch": 0.03335643638856709,
+      "validation_cross_entropy_at_best_epoch": 0.012644613161683083,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9872881355932204,
+      "known_class_macro_f1": 0.954448148511292,
+      "known_class_balanced_accuracy": 0.9663915094339622,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.995260663507109,
+          "recall": 0.9905660377358491,
+          "f1-score": 0.9929078014184397,
+          "support": 424.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 0.9375,
+          "f1-score": 0.967741935483871,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.7894736842105263,
+          "recall": 0.9375,
+          "f1-score": 0.8571428571428571,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9872881355932204,
+        "macro avg": {
+          "precision": 0.9461835869294088,
+          "recall": 0.9663915094339622,
+          "f1-score": 0.954448148511292,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9886061446491158,
+          "recall": 0.9872881355932204,
+          "f1-score": 0.9876929332276401,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9872881355932204,
+        "precision": 0.92,
+        "recall": 0.9583333333333334,
+        "f1": 0.9387755102040817
+      },
+      "novel_mechanism_auroc": 0.8725503177966102,
+      "novel_mechanism_average_precision": 0.32286862895662655,
+      "false_positive_rate_at_95pct_novel_recall": 0.9216101694915254,
+      "novel_recall_at_conformal_alpha_005": 0.6875,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.05508474576271186,
+      "rare_severe_benign_false_rejection_rate": 0.09523809523809523,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.14
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_upcoding_seed_143.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "unbundling",
+      "seed": 243,
+      "model_seed": 243,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.4200366854667663,
+      "train_loss_best_epoch": 0.07616465613245964,
+      "validation_cross_entropy_at_best_epoch": 0.17509077489376068,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9427966101694916,
+      "known_class_macro_f1": 0.7533475072211664,
+      "known_class_balanced_accuracy": 0.7886202830188679,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9879518072289156,
+          "recall": 0.9669811320754716,
+          "f1-score": 0.9773539928486293,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.3,
+          "recall": 0.375,
+          "f1-score": 0.3333333333333333,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.6190476190476191,
+          "recall": 0.8125,
+          "f1-score": 0.7027027027027027,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9427966101694916,
+        "macro avg": {
+          "precision": 0.7267498565691337,
+          "recall": 0.7886202830188679,
+          "f1-score": 0.7533475072211664,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9525345935801317,
+          "recall": 0.9427966101694916,
+          "f1-score": 0.9469802320855835,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9597457627118644,
+        "precision": 0.7543859649122807,
+        "recall": 0.8958333333333334,
+        "f1": 0.819047619047619
+      },
+      "novel_mechanism_auroc": 0.3872484110169492,
+      "novel_mechanism_average_precision": 0.02651996270176239,
+      "false_positive_rate_at_95pct_novel_recall": 0.9661016949152542,
+      "novel_recall_at_conformal_alpha_005": 0.0,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.057203389830508475,
+      "rare_severe_benign_false_rejection_rate": 0.047619047619047616,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.02
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_unbundling_seed_243.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "unbundling",
+      "seed": 243,
+      "model_seed": 243,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 23,
+      "train_loss_first_epoch": 1.214117604494095,
+      "train_loss_best_epoch": 0.03974027372896671,
+      "validation_cross_entropy_at_best_epoch": 0.11407213658094406,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9576271186440678,
+      "known_class_macro_f1": 0.7449317738791423,
+      "known_class_balanced_accuracy": 0.7175707547169812,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9791183294663574,
+          "recall": 0.9952830188679245,
+          "f1-score": 0.9871345029239766,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.42857142857142855,
+          "recall": 0.375,
+          "f1-score": 0.4,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.7272727272727273,
+          "recall": 0.5,
+          "f1-score": 0.5925925925925926,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9576271186440678,
+        "macro avg": {
+          "precision": 0.7837406213276283,
+          "recall": 0.7175707547169812,
+          "f1-score": 0.7449317738791423,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9526264368373771,
+          "recall": 0.9576271186440678,
+          "f1-score": 0.9542934549178974,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9766949152542372,
+        "precision": 0.9512195121951219,
+        "recall": 0.8125,
+        "f1": 0.8764044943820225
+      },
+      "novel_mechanism_auroc": 0.7382150423728814,
+      "novel_mechanism_average_precision": 0.08031566607106505,
+      "false_positive_rate_at_95pct_novel_recall": 0.6165254237288136,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.04025423728813559,
+      "rare_severe_benign_false_rejection_rate": 0.047619047619047616,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.08
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_unbundling_seed_243.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "unbundling",
+      "seed": 243,
+      "model_seed": 243,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.3824880063533782,
+      "train_loss_best_epoch": 0.054110761173069476,
+      "validation_cross_entropy_at_best_epoch": 0.06721633672714233,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.972457627118644,
+      "known_class_macro_f1": 0.8597682867473231,
+      "known_class_balanced_accuracy": 0.8720518867924528,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9928909952606635,
+          "recall": 0.9882075471698113,
+          "f1-score": 0.9905437352245863,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.625,
+          "recall": 0.625,
+          "f1-score": 0.625,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.7777777777777778,
+          "recall": 0.875,
+          "f1-score": 0.8235294117647058,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.972457627118644,
+        "macro avg": {
+          "precision": 0.8489171932596103,
+          "recall": 0.8720518867924528,
+          "f1-score": 0.8597682867473231,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9733691238028936,
+          "recall": 0.972457627118644,
+          "f1-score": 0.9728114710242795,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9830508474576272,
+        "precision": 0.9,
+        "recall": 0.9375,
+        "f1": 0.9183673469387755
+      },
+      "novel_mechanism_auroc": 0.7597987288135593,
+      "novel_mechanism_average_precision": 0.07887642482611089,
+      "false_positive_rate_at_95pct_novel_recall": 0.8432203389830508,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.059322033898305086,
+      "rare_severe_benign_false_rejection_rate": 0.047619047619047616,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.08
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_unbundling_seed_243.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "phantom_billing",
+      "seed": 343,
+      "model_seed": 343,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.3479565858840943,
+      "train_loss_best_epoch": 0.04290233887732029,
+      "validation_cross_entropy_at_best_epoch": 0.13660885393619537,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9639830508474576,
+      "known_class_macro_f1": 0.8762956986203122,
+      "known_class_balanced_accuracy": 0.9147995283018868,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.988009592326139,
+          "recall": 0.9716981132075472,
+          "f1-score": 0.9797859690844233,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.55,
+          "recall": 0.6875,
+          "f1-score": 0.6111111111111112,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 0.8421052631578947,
+          "recall": 1.0,
+          "f1-score": 0.9142857142857143,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9639830508474576,
+        "macro avg": {
+          "precision": 0.8450287138710084,
+          "recall": 0.9147995283018868,
+          "f1-score": 0.8762956986203122,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9686223545695112,
+          "recall": 0.9639830508474576,
+          "f1-score": 0.9657533900384421,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9639830508474576,
+        "precision": 0.7818181818181819,
+        "recall": 0.8958333333333334,
+        "f1": 0.8349514563106796
+      },
+      "novel_mechanism_auroc": 0.5378707627118644,
+      "novel_mechanism_average_precision": 0.17318152022552408,
+      "false_positive_rate_at_95pct_novel_recall": 0.9639830508474576,
+      "novel_recall_at_conformal_alpha_005": 0.375,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.0635593220338983,
+      "rare_severe_benign_false_rejection_rate": 0.09523809523809523,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.07
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_phantom_billing_seed_343.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "phantom_billing",
+      "seed": 343,
+      "model_seed": 343,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 23,
+      "train_loss_first_epoch": 1.1811212301254272,
+      "train_loss_best_epoch": 0.0280926363542676,
+      "validation_cross_entropy_at_best_epoch": 0.07689573615789413,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9830508474576272,
+      "known_class_macro_f1": 0.9388124043943818,
+      "known_class_balanced_accuracy": 0.9501768867924528,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9928909952606635,
+          "recall": 0.9882075471698113,
+          "f1-score": 0.9905437352245863,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.7222222222222222,
+          "recall": 0.8125,
+          "f1-score": 0.7647058823529411,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9830508474576272,
+        "macro avg": {
+          "precision": 0.9287783043707214,
+          "recall": 0.9501768867924528,
+          "f1-score": 0.9388124043943818,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9841977490382985,
+          "recall": 0.9830508474576272,
+          "f1-score": 0.9835293174848976,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9830508474576272,
+        "precision": 0.9,
+        "recall": 0.9375,
+        "f1": 0.9183673469387755
+      },
+      "novel_mechanism_auroc": 0.8783765889830508,
+      "novel_mechanism_average_precision": 0.31060136015633655,
+      "false_positive_rate_at_95pct_novel_recall": 0.7372881355932204,
+      "novel_recall_at_conformal_alpha_005": 0.3125,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.03389830508474576,
+      "rare_severe_benign_false_rejection_rate": 0.14285714285714285,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.13
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_phantom_billing_seed_343.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "phantom_billing",
+      "seed": 343,
+      "model_seed": 343,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 18,
+      "train_loss_first_epoch": 1.0886005938053132,
+      "train_loss_best_epoch": 0.06631025969982147,
+      "validation_cross_entropy_at_best_epoch": 0.09331148117780685,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9809322033898306,
+      "known_class_macro_f1": 0.9309379911189866,
+      "known_class_balanced_accuracy": 0.9495872641509434,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9928741092636579,
+          "recall": 0.9858490566037735,
+          "f1-score": 0.9893491124260355,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.7222222222222222,
+          "recall": 0.8125,
+          "f1-score": 0.7647058823529411,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 0.9411764705882353,
+          "recall": 1.0,
+          "f1-score": 0.9696969696969697,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9809322033898306,
+        "macro avg": {
+          "precision": 0.9140682005185288,
+          "recall": 0.9495872641509434,
+          "f1-score": 0.9309379911189866,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9821885623151658,
+          "recall": 0.9809322033898306,
+          "f1-score": 0.9814289603844017,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9809322033898306,
+        "precision": 0.8823529411764706,
+        "recall": 0.9375,
+        "f1": 0.9090909090909091
+      },
+      "novel_mechanism_auroc": 0.9669623940677966,
+      "novel_mechanism_average_precision": 0.43431612816697995,
+      "false_positive_rate_at_95pct_novel_recall": 0.09322033898305085,
+      "novel_recall_at_conformal_alpha_005": 0.5625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.025423728813559324,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.16
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_phantom_billing_seed_343.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "collusion",
+      "seed": 443,
+      "model_seed": 443,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.466192078590393,
+      "train_loss_best_epoch": 0.07215424180030823,
+      "validation_cross_entropy_at_best_epoch": 0.09326949715614319,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9597457627118644,
+      "known_class_macro_f1": 0.7833711311445606,
+      "known_class_balanced_accuracy": 0.7783018867924528,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9766899766899767,
+          "recall": 0.9882075471698113,
+          "f1-score": 0.9824150058616647,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.625,
+          "recall": 0.3125,
+          "f1-score": 0.4166666666666667,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 0.9411764705882353,
+          "recall": 1.0,
+          "f1-score": 0.9696969696969697,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.7222222222222222,
+          "recall": 0.8125,
+          "f1-score": 0.7647058823529411,
+          "support": 16.0
+        },
+        "accuracy": 0.9597457627118644,
+        "macro avg": {
+          "precision": 0.8162721673751085,
+          "recall": 0.7783018867924528,
+          "f1-score": 0.7833711311445606,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9549384093252488,
+          "recall": 0.9597457627118644,
+          "f1-score": 0.9554260059000236,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9682203389830508,
+        "precision": 0.8837209302325582,
+        "recall": 0.7916666666666666,
+        "f1": 0.8351648351648352
+      },
+      "novel_mechanism_auroc": 0.8949284957627119,
+      "novel_mechanism_average_precision": 0.19285060681520808,
+      "false_positive_rate_at_95pct_novel_recall": 0.2542372881355932,
+      "novel_recall_at_conformal_alpha_005": 0.375,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.06991525423728813,
+      "rare_severe_benign_false_rejection_rate": 0.047619047619047616,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.14
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_collusion_seed_443.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "collusion",
+      "seed": 443,
+      "model_seed": 443,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.429078459739685,
+      "train_loss_best_epoch": 0.06748854480683804,
+      "validation_cross_entropy_at_best_epoch": 0.08013167977333069,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9300847457627118,
+      "known_class_macro_f1": 0.6860081848769632,
+      "known_class_balanced_accuracy": 0.6948702830188679,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9738717339667459,
+          "recall": 0.9669811320754716,
+          "f1-score": 0.9704142011834319,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.29411764705882354,
+          "recall": 0.3125,
+          "f1-score": 0.30303030303030304,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.4444444444444444,
+          "recall": 0.5,
+          "f1-score": 0.47058823529411764,
+          "support": 16.0
+        },
+        "accuracy": 0.9300847457627118,
+        "macro avg": {
+          "precision": 0.6781084563675035,
+          "recall": 0.6948702830188679,
+          "f1-score": 0.6860081848769632,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9337682386990519,
+          "recall": 0.9300847457627118,
+          "f1-score": 0.9318506735486565,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9470338983050848,
+        "precision": 0.7254901960784313,
+        "recall": 0.7708333333333334,
+        "f1": 0.7474747474747475
+      },
+      "novel_mechanism_auroc": 0.6108977754237288,
+      "novel_mechanism_average_precision": 0.0478356956468035,
+      "false_positive_rate_at_95pct_novel_recall": 0.7838983050847458,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.03177966101694915,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.02
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_collusion_seed_443.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "collusion",
+      "seed": 443,
+      "model_seed": 443,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.4199316859245301,
+      "train_loss_best_epoch": 0.08252988494932652,
+      "validation_cross_entropy_at_best_epoch": 0.046412695199251175,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.961864406779661,
+      "known_class_macro_f1": 0.8524544129332305,
+      "known_class_balanced_accuracy": 0.8991745283018868,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9927710843373494,
+          "recall": 0.9716981132075472,
+          "f1-score": 0.9821215733015495,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.5652173913043478,
+          "recall": 0.8125,
+          "f1-score": 0.6666666666666666,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 0.9375,
+          "recall": 0.9375,
+          "f1-score": 0.9375,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.7777777777777778,
+          "recall": 0.875,
+          "f1-score": 0.8235294117647058,
+          "support": 16.0
+        },
+        "accuracy": 0.961864406779661,
+        "macro avg": {
+          "precision": 0.8183165633548687,
+          "recall": 0.8991745283018868,
+          "f1-score": 0.8524544129332305,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9691162340346401,
+          "recall": 0.961864406779661,
+          "f1-score": 0.9645395854549977,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9682203389830508,
+        "precision": 0.7894736842105263,
+        "recall": 0.9375,
+        "f1": 0.8571428571428571
+      },
+      "novel_mechanism_auroc": 0.8569915254237288,
+      "novel_mechanism_average_precision": 0.10517321336107685,
+      "false_positive_rate_at_95pct_novel_recall": 0.3241525423728814,
+      "novel_recall_at_conformal_alpha_005": 0.125,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.05084745762711865,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.13
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_collusion_seed_443.pt",
+      "data_seed": 43,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "upcoding",
+      "seed": 144,
+      "model_seed": 144,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.2295624792575837,
+      "train_loss_best_epoch": 0.014338883571326733,
+      "validation_cross_entropy_at_best_epoch": 0.025758277624845505,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9915254237288136,
+      "known_class_macro_f1": 0.9654901960784313,
+      "known_class_balanced_accuracy": 0.9525353773584906,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9929577464788732,
+          "recall": 0.9976415094339622,
+          "f1-score": 0.9952941176470588,
+          "support": 424.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.9285714285714286,
+          "recall": 0.8125,
+          "f1-score": 0.8666666666666667,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9915254237288136,
+        "macro avg": {
+          "precision": 0.9803822937625755,
+          "recall": 0.9525353773584906,
+          "f1-score": 0.9654901960784313,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9912526003478498,
+          "recall": 0.9915254237288136,
+          "f1-score": 0.9912529079428382,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9915254237288136,
+        "precision": 0.9782608695652174,
+        "recall": 0.9375,
+        "f1": 0.9574468085106383
+      },
+      "novel_mechanism_auroc": 0.7766154661016949,
+      "novel_mechanism_average_precision": 0.23307537357690616,
+      "false_positive_rate_at_95pct_novel_recall": 0.8411016949152542,
+      "novel_recall_at_conformal_alpha_005": 0.5,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.036016949152542374,
+      "rare_severe_benign_false_rejection_rate": 0.06666666666666667,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.11
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_upcoding_seed_144.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "upcoding",
+      "seed": 144,
+      "model_seed": 144,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.2716612219810486,
+      "train_loss_best_epoch": 0.023180338181555273,
+      "validation_cross_entropy_at_best_epoch": 0.02170623280107975,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.989406779661017,
+      "known_class_macro_f1": 0.9554276915596256,
+      "known_class_balanced_accuracy": 0.9369103773584906,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.990632318501171,
+          "recall": 0.9976415094339622,
+          "f1-score": 0.9941245593419507,
+          "support": 424.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.9230769230769231,
+          "recall": 0.75,
+          "f1-score": 0.8275862068965517,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.989406779661017,
+        "macro avg": {
+          "precision": 0.9784273103945236,
+          "recall": 0.9369103773584906,
+          "f1-score": 0.9554276915596256,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9889774021477273,
+          "recall": 0.989406779661017,
+          "f1-score": 0.9888775264223133,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.989406779661017,
+        "precision": 0.9777777777777777,
+        "recall": 0.9166666666666666,
+        "f1": 0.946236559139785
+      },
+      "novel_mechanism_auroc": 0.8344809322033898,
+      "novel_mechanism_average_precision": 0.3390527669285329,
+      "false_positive_rate_at_95pct_novel_recall": 0.760593220338983,
+      "novel_recall_at_conformal_alpha_005": 0.5,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.036016949152542374,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.11
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_upcoding_seed_144.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "upcoding",
+      "seed": 144,
+      "model_seed": 144,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.1386803686618805,
+      "train_loss_best_epoch": 0.012192822806537152,
+      "validation_cross_entropy_at_best_epoch": 0.012800945900380611,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9957627118644068,
+      "known_class_macro_f1": 0.9832827324478178,
+      "known_class_balanced_accuracy": 0.96875,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9953051643192489,
+          "recall": 1.0,
+          "f1-score": 0.9976470588235294,
+          "support": 424.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 0.9375,
+          "f1-score": 0.967741935483871,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 1.0,
+          "recall": 0.9375,
+          "f1-score": 0.967741935483871,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9957627118644068,
+        "macro avg": {
+          "precision": 0.9988262910798122,
+          "recall": 0.96875,
+          "f1-score": 0.9832827324478178,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9957826052359354,
+          "recall": 0.9957627118644068,
+          "f1-score": 0.9956993535522466,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9957627118644068,
+        "precision": 1.0,
+        "recall": 0.9583333333333334,
+        "f1": 0.9787234042553191
+      },
+      "novel_mechanism_auroc": 0.9261784957627118,
+      "novel_mechanism_average_precision": 0.3972464624486338,
+      "false_positive_rate_at_95pct_novel_recall": 0.4703389830508475,
+      "novel_recall_at_conformal_alpha_005": 0.5625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.05084745762711865,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.14
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_upcoding_seed_144.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "unbundling",
+      "seed": 244,
+      "model_seed": 244,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.2286070346832276,
+      "train_loss_best_epoch": 0.10799628645181655,
+      "validation_cross_entropy_at_best_epoch": 0.12208971381187439,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9533898305084746,
+      "known_class_macro_f1": 0.7937866366272399,
+      "known_class_balanced_accuracy": 0.8216391509433962,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9904076738609112,
+          "recall": 0.9740566037735849,
+          "f1-score": 0.9821640903686087,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.45454545454545453,
+          "recall": 0.625,
+          "f1-score": 0.5263157894736842,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.6470588235294118,
+          "recall": 0.6875,
+          "f1-score": 0.6666666666666666,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9533898305084746,
+        "macro avg": {
+          "precision": 0.7730029879839444,
+          "recall": 0.8216391509433962,
+          "f1-score": 0.7937866366272399,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9609290723860683,
+          "recall": 0.9533898305084746,
+          "f1-score": 0.9566213847765588,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9682203389830508,
+        "precision": 0.8,
+        "recall": 0.9166666666666666,
+        "f1": 0.8543689320388349
+      },
+      "novel_mechanism_auroc": 0.523636122881356,
+      "novel_mechanism_average_precision": 0.04412024629995111,
+      "false_positive_rate_at_95pct_novel_recall": 0.9322033898305084,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.04025423728813559,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.04
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_unbundling_seed_244.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "unbundling",
+      "seed": 244,
+      "model_seed": 244,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.2928132653236388,
+      "train_loss_best_epoch": 0.05760208405554294,
+      "validation_cross_entropy_at_best_epoch": 0.11121103167533875,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9597457627118644,
+      "known_class_macro_f1": 0.7975861711980168,
+      "known_class_balanced_accuracy": 0.7783018867924528,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9744186046511628,
+          "recall": 0.9882075471698113,
+          "f1-score": 0.9812646370023419,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.45454545454545453,
+          "recall": 0.3125,
+          "f1-score": 0.37037037037037035,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.8666666666666667,
+          "recall": 0.8125,
+          "f1-score": 0.8387096774193549,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9597457627118644,
+        "macro avg": {
+          "precision": 0.823907681465821,
+          "recall": 0.7783018867924528,
+          "f1-score": 0.7975861711980168,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.954010343880269,
+          "recall": 0.9597457627118644,
+          "f1-score": 0.9563590823170097,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9661016949152542,
+        "precision": 0.8809523809523809,
+        "recall": 0.7708333333333334,
+        "f1": 0.8222222222222222
+      },
+      "novel_mechanism_auroc": 0.40419756355932207,
+      "novel_mechanism_average_precision": 0.028643430005370556,
+      "false_positive_rate_at_95pct_novel_recall": 0.9364406779661016,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.046610169491525424,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.01
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_unbundling_seed_244.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "unbundling",
+      "seed": 244,
+      "model_seed": 244,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 19,
+      "train_loss_first_epoch": 1.1821516931056977,
+      "train_loss_best_epoch": 0.0893244318664074,
+      "validation_cross_entropy_at_best_epoch": 0.0593741200864315,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9788135593220338,
+      "known_class_macro_f1": 0.8899320194790339,
+      "known_class_balanced_accuracy": 0.9038915094339622,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.995260663507109,
+          "recall": 0.9905660377358491,
+          "f1-score": 0.9929078014184397,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.7333333333333333,
+          "recall": 0.6875,
+          "f1-score": 0.7096774193548387,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.7894736842105263,
+          "recall": 0.9375,
+          "f1-score": 0.8571428571428571,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9788135593220338,
+        "macro avg": {
+          "precision": 0.8795169202627422,
+          "recall": 0.9038915094339622,
+          "f1-score": 0.8899320194790339,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.979566596626517,
+          "recall": 0.9788135593220338,
+          "f1-score": 0.9789449835283508,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9872881355932204,
+        "precision": 0.92,
+        "recall": 0.9583333333333334,
+        "f1": 0.9387755102040817
+      },
+      "novel_mechanism_auroc": 0.7051112288135593,
+      "novel_mechanism_average_precision": 0.10744961959211617,
+      "false_positive_rate_at_95pct_novel_recall": 0.8283898305084746,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.03389830508474576,
+      "rare_severe_benign_false_rejection_rate": 0.0,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.08
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_unbundling_seed_244.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "phantom_billing",
+      "seed": 344,
+      "model_seed": 344,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.403199887275696,
+      "train_loss_best_epoch": 0.04731453638523817,
+      "validation_cross_entropy_at_best_epoch": 0.04466494917869568,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9851694915254238,
+      "known_class_macro_f1": 0.9506267833669969,
+      "known_class_balanced_accuracy": 0.9808372641509434,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9976133651551312,
+          "recall": 0.9858490566037735,
+          "f1-score": 0.9916963226571768,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.7142857142857143,
+          "recall": 0.9375,
+          "f1-score": 0.8108108108108109,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9851694915254238,
+        "macro avg": {
+          "precision": 0.9279747698602114,
+          "recall": 0.9808372641509434,
+          "f1-score": 0.9506267833669969,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9881708437592099,
+          "recall": 0.9851694915254238,
+          "f1-score": 0.9861275715669829,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9851694915254238,
+        "precision": 0.8867924528301887,
+        "recall": 0.9791666666666666,
+        "f1": 0.9306930693069307
+      },
+      "novel_mechanism_auroc": 0.6511520127118644,
+      "novel_mechanism_average_precision": 0.11851002987790615,
+      "false_positive_rate_at_95pct_novel_recall": 0.951271186440678,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.038135593220338986,
+      "rare_severe_benign_false_rejection_rate": 0.06666666666666667,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.07
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_phantom_billing_seed_344.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "phantom_billing",
+      "seed": 344,
+      "model_seed": 344,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 24,
+      "train_loss_first_epoch": 1.1632742702960968,
+      "train_loss_best_epoch": 0.03189028967171907,
+      "validation_cross_entropy_at_best_epoch": 0.05414045974612236,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9809322033898306,
+      "known_class_macro_f1": 0.9247691781602645,
+      "known_class_balanced_accuracy": 0.9195165094339622,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9882352941176471,
+          "recall": 0.9905660377358491,
+          "f1-score": 0.9893992932862191,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.7333333333333333,
+          "recall": 0.6875,
+          "f1-score": 0.7096774193548387,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9809322033898306,
+        "macro avg": {
+          "precision": 0.9303921568627451,
+          "recall": 0.9195165094339622,
+          "f1-score": 0.9247691781602645,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9803921568627451,
+          "recall": 0.9809322033898306,
+          "f1-score": 0.9806358878454118,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9809322033898306,
+        "precision": 0.9148936170212766,
+        "recall": 0.8958333333333334,
+        "f1": 0.9052631578947369
+      },
+      "novel_mechanism_auroc": 0.7942929025423728,
+      "novel_mechanism_average_precision": 0.14828267149364327,
+      "false_positive_rate_at_95pct_novel_recall": 0.760593220338983,
+      "novel_recall_at_conformal_alpha_005": 0.3125,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.048728813559322036,
+      "rare_severe_benign_false_rejection_rate": 0.06666666666666667,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.12
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_phantom_billing_seed_344.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "phantom_billing",
+      "seed": 344,
+      "model_seed": 344,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 23,
+      "train_loss_first_epoch": 1.2890067458152772,
+      "train_loss_best_epoch": 0.06499148644506932,
+      "validation_cross_entropy_at_best_epoch": 0.035889796912670135,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9830508474576272,
+      "known_class_macro_f1": 0.9383229724461952,
+      "known_class_balanced_accuracy": 0.9652122641509434,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9952380952380953,
+          "recall": 0.9858490566037735,
+          "f1-score": 0.990521327014218,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.8235294117647058,
+          "recall": 0.875,
+          "f1-score": 0.8484848484848485,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 0.8421052631578947,
+          "recall": 1.0,
+          "f1-score": 0.9142857142857143,
+          "support": 16.0
+        },
+        "collusion": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "accuracy": 0.9830508474576272,
+        "macro avg": {
+          "precision": 0.9152181925401739,
+          "recall": 0.9652122641509434,
+          "f1-score": 0.9383229724461952,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.984387938940072,
+          "recall": 0.9830508474576272,
+          "f1-score": 0.9834435840219438,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9830508474576272,
+        "precision": 0.8846153846153846,
+        "recall": 0.9583333333333334,
+        "f1": 0.92
+      },
+      "novel_mechanism_auroc": 0.719676906779661,
+      "novel_mechanism_average_precision": 0.10902780499347045,
+      "false_positive_rate_at_95pct_novel_recall": 0.5720338983050848,
+      "novel_recall_at_conformal_alpha_005": 0.3125,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.059322033898305086,
+      "rare_severe_benign_false_rejection_rate": 0.06666666666666667,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.08
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_phantom_billing_seed_344.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "LSTM",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "collusion",
+      "seed": 444,
+      "model_seed": 444,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.4907034397125245,
+      "train_loss_best_epoch": 0.07596485242247582,
+      "validation_cross_entropy_at_best_epoch": 0.13582687079906464,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9661016949152542,
+      "known_class_macro_f1": 0.8408315836355538,
+      "known_class_balanced_accuracy": 0.855247641509434,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9904988123515439,
+          "recall": 0.9834905660377359,
+          "f1-score": 0.98698224852071,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.6,
+          "recall": 0.75,
+          "f1-score": 0.6666666666666666,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.7333333333333333,
+          "recall": 0.6875,
+          "f1-score": 0.7096774193548387,
+          "support": 16.0
+        },
+        "accuracy": 0.9661016949152542,
+        "macro avg": {
+          "precision": 0.8309580364212193,
+          "recall": 0.855247641509434,
+          "f1-score": 0.8408315836355538,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9688661647677711,
+          "recall": 0.9661016949152542,
+          "f1-score": 0.9671652092142482,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9766949152542372,
+        "precision": 0.8627450980392157,
+        "recall": 0.9166666666666666,
+        "f1": 0.8888888888888888
+      },
+      "novel_mechanism_auroc": 0.8783103813559322,
+      "novel_mechanism_average_precision": 0.1269591440901505,
+      "false_positive_rate_at_95pct_novel_recall": 0.3029661016949153,
+      "novel_recall_at_conformal_alpha_005": 0.0625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.03389830508474576,
+      "rare_severe_benign_false_rejection_rate": 0.06666666666666667,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.14
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_lstm_hidden_collusion_seed_444.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "CNN1D",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "collusion",
+      "seed": 444,
+      "model_seed": 444,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 25,
+      "train_loss_first_epoch": 1.4096936225891112,
+      "train_loss_best_epoch": 0.05218890197575092,
+      "validation_cross_entropy_at_best_epoch": 0.130456805229187,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.972457627118644,
+      "known_class_macro_f1": 0.8643524494437274,
+      "known_class_balanced_accuracy": 0.8570165094339622,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9859154929577465,
+          "recall": 0.9905660377358491,
+          "f1-score": 0.9882352941176471,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.6923076923076923,
+          "recall": 0.5625,
+          "f1-score": 0.6206896551724138,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.8235294117647058,
+          "recall": 0.875,
+          "f1-score": 0.8484848484848485,
+          "support": 16.0
+        },
+        "accuracy": 0.972457627118644,
+        "macro avg": {
+          "precision": 0.875438149257536,
+          "recall": 0.8570165094339622,
+          "f1-score": 0.8643524494437274,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9709355141509385,
+          "recall": 0.972457627118644,
+          "f1-score": 0.9714376202635562,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9788135593220338,
+        "precision": 0.9130434782608695,
+        "recall": 0.875,
+        "f1": 0.8936170212765957
+      },
+      "novel_mechanism_auroc": 0.9323358050847458,
+      "novel_mechanism_average_precision": 0.2573888752585064,
+      "false_positive_rate_at_95pct_novel_recall": 0.2584745762711864,
+      "novel_recall_at_conformal_alpha_005": 0.5625,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.05084745762711865,
+      "rare_severe_benign_false_rejection_rate": 0.06666666666666667,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.14
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_cnn1d_hidden_collusion_seed_444.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    },
+    {
+      "model": "Transformer",
+      "input_mode": "shared_context",
+      "hidden_mechanism": "collusion",
+      "seed": 444,
+      "model_seed": 444,
+      "device": "cpu",
+      "epochs_requested": 25,
+      "best_epoch": 21,
+      "train_loss_first_epoch": 1.4580900907516479,
+      "train_loss_best_epoch": 0.08549400940537452,
+      "validation_cross_entropy_at_best_epoch": 0.10254033654928207,
+      "n_train": 1283,
+      "n_validation": 227,
+      "n_calibration": 346,
+      "n_test": 488,
+      "n_test_known": 472,
+      "n_test_novel": 16,
+      "known_class_accuracy": 0.9703389830508474,
+      "known_class_macro_f1": 0.85503128010965,
+      "known_class_balanced_accuracy": 0.8564268867924528,
+      "known_class_report": {
+        "benign": {
+          "precision": 0.9905437352245863,
+          "recall": 0.9882075471698113,
+          "f1-score": 0.9893742621015348,
+          "support": 424.0
+        },
+        "upcoding": {
+          "precision": 0.631578947368421,
+          "recall": 0.75,
+          "f1-score": 0.6857142857142857,
+          "support": 16.0
+        },
+        "unbundling": {
+          "precision": 1.0,
+          "recall": 0.8125,
+          "f1-score": 0.896551724137931,
+          "support": 16.0
+        },
+        "phantom_billing": {
+          "precision": 0.8235294117647058,
+          "recall": 0.875,
+          "f1-score": 0.8484848484848485,
+          "support": 16.0
+        },
+        "accuracy": 0.9703389830508474,
+        "macro avg": {
+          "precision": 0.8614130235894282,
+          "recall": 0.8564268867924528,
+          "f1-score": 0.85503128010965,
+          "support": 472.0
+        },
+        "weighted avg": {
+          "precision": 0.9730344861893107,
+          "recall": 0.9703389830508474,
+          "f1-score": 0.9711582645433131,
+          "support": 472.0
+        }
+      },
+      "known_test_fraud_vs_benign_metrics": {
+        "accuracy": 0.9809322033898306,
+        "precision": 0.8979591836734694,
+        "recall": 0.9166666666666666,
+        "f1": 0.9072164948453608
+      },
+      "novel_mechanism_auroc": 0.8702330508474576,
+      "novel_mechanism_average_precision": 0.11917832550380185,
+      "false_positive_rate_at_95pct_novel_recall": 0.2796610169491525,
+      "novel_recall_at_conformal_alpha_005": 0.1875,
+      "known_false_rejection_rate_at_conformal_alpha_005": 0.046610169491525424,
+      "rare_severe_benign_false_rejection_rate": 0.06666666666666667,
+      "precision_at_k": {
+        "k": 100,
+        "value": 0.12
+      },
+      "conformal_alpha": 0.05,
+      "novelty_method": "equal-weight energy empirical-CDF + latent Mahalanobis empirical-CDF; split conformal calibration",
+      "input_modality": "standardized_relational_context_tokens_shared_by_all_architectures",
+      "trained_weights_path": "weights/shared_context_transformer_hidden_collusion_seed_444.pt",
+      "data_seed": 44,
+      "train_validation_calibration_protocol": "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
+    }
+  ],
+  "limitations": [
+    "Synthetic generator contains designed proxies for each mechanism; metrics measure performance on this generator only.",
+    "A held-out mechanism is evaluated as novelty; it is not a separately supervised output class.",
+    "The three architectures are trained independently, not as the same fused encoder.",
+    "Native mode varies input modality; shared_context mode supplies identical standardized context tokens and a padding mask to all three architectures.",
+    "Temporal graph encoder and public provider-level benchmark are separate experiments and not combined into this standalone comparison.",
+    "Three seeds provide an initial stability check, not publication-grade confidence intervals; complete the registered seed/ablation plan before submission."
+  ]
+}
