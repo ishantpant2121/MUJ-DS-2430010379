@@ -17,7 +17,7 @@ This checklist separates artifacts built in the repository from actions that req
 
 ## Before submission
 
-- [ ] Review the temporal heterogeneous graph pull request and confirm CI has passed; merge it only after checks pass.
+- [x] Merged the typed temporal graph implementation after the test matrix, graph smoke test and full 12-fold synthetic benchmark passed.
 - [x] Ran and reviewed the full 12-run graph benchmark; its measured results are added to the paper and committed under results/temporal_heterograph_full/.
 - [ ] Verify cited publications claim-by-claim against source publications and confirm all external URLs.
 - [ ] If required, transcribe a small HBP package/rate subset from the official NHA document, recording source page, version, review date and reviewer; do not represent synthetic placeholder rates as official rates.
