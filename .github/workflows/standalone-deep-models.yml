@@ -1,0 +1,109 @@
+name: Standalone LSTM CNN Transformer benchmarks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/train_evaluate_deep_models.py"
+      - "tests/test_standalone_deep_models.py"
+      - "owerf_deep_experiment.py"
+      - "owerf_deep_encoders.py"
+      - "requirements-deep.txt"
+      - ".github/workflows/standalone-deep-models.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/train_evaluate_deep_models.py"
+      - "tests/test_standalone_deep_models.py"
+      - "owerf_deep_experiment.py"
+      - "owerf_deep_encoders.py"
+      - "requirements-deep.txt"
+      - ".github/workflows/standalone-deep-models.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  train-test-compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install CPU PyTorch and model requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Test all three model architectures and small training loop
+        run: python -m pytest tests/test_standalone_deep_models.py -v
+      - name: Train and test LSTM, CNN and Transformer across four withheld mechanisms and three seeds
+        run: |
+          python scripts/train_evaluate_deep_models.py \
+            --n-samples 2400 \
+            --epochs 5 \
+            --batch-size 128 \
+            --seeds 42,43,44 \
+            --hidden all \
+            --output-dir results/standalone_deep_models
+      - name: Validate training coverage and reported metrics
+        run: |
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          report = json.loads(Path("results/standalone_deep_models/standalone_deep_model_metrics.json").read_text())
+          runs = report["runs"]
+          assert len(runs) == 36, f"Expected 3 models x 4 folds x 3 seeds, got {len(runs)}"
+          assert {x["model"] for x in runs} == {"LSTM", "CNN1D", "Transformer"}
+          assert {x["hidden_mechanism"] for x in runs} == {"upcoding", "unbundling", "phantom_billing", "collusion"}
+          assert {x["data_seed"] for x in runs} == {42, 43, 44}
+          for row in runs:
+              for key in ("known_class_accuracy", "known_class_macro_f1", "novel_mechanism_auroc",
+                          "novel_mechanism_average_precision", "novel_recall_at_conformal_alpha_005"):
+                  value = row[key]
+                  assert value is not None and math.isfinite(value) and 0 <= value <= 1, (row["model"], row["hidden_mechanism"], key, value)
+              assert row["trained_weights_path"]
+          assert len(list(Path("results/standalone_deep_models/weights").glob("*.pt"))) == 36
+          for model, metrics in report["summary_by_model"].items():
+              print(model, json.dumps(metrics, sort_keys=True))
+          print("PASS: trained and evaluated 36 models (3 architectures x 4 hidden mechanisms x 3 seeds).")
+          PY
+      - name: Commit reproducible metrics and model weights on main
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/standalone_deep_models/standalone_deep_model_metrics.json \
+            results/standalone_deep_models/standalone_deep_model_metrics.csv \
+            results/standalone_deep_models/weights
+          if git diff --cached --quiet; then
+            echo "Standalone model metrics and weights are unchanged."
+            exit 0
+          fi
+          git commit -m "results: record standalone LSTM CNN Transformer benchmarks"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push raced with another main update (attempt $attempt); retrying after rebase."
+            sleep $((attempt * 2))
+          done
+          echo "Could not publish standalone model results after 5 attempts."
+          exit 1
+      - name: Upload metrics and saved weights
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-lstm-cnn-transformer-benchmark
+          path: |
+            results/standalone_deep_models/standalone_deep_model_metrics.json
+            results/standalone_deep_models/standalone_deep_model_metrics.csv
+            results/standalone_deep_models/weights/*.pt
+          if-no-files-found: error

@@ -1,7 +1,15 @@
 """
-OW-ERF deep encoders (PyTorch). STATUS: written and syntax-checked only.
-NOT trained, NOT evaluated, and not run in the environment where it was written
-(PyTorch was unavailable there). Run the smoke test first:  python owerf_deep_encoders.py
+OW-ERF deep encoder module (PyTorch).
+
+The fused LSTM + 1D-CNN + Transformer encoder is trained and evaluated by
+`owerf_deep_experiment.py` on generated synthetic claims. The training workflow
+runs a four-mechanism held-out evaluation and saves measured results to
+`results/deep_prototype_results.json`. Run a local experiment with:
+    python owerf_deep_experiment.py --n-samples 1600 --epochs 3 --hidden all --seed 42
+
+This is a synthetic proof-of-pipeline. The sequence/context inputs are generated
+proxies, the full temporal heterogeneous graph model is not implemented, and
+these experiments do not establish real-world insurance-claim validity.
 
 Branches (each must be justified by an ablation before you claim it helps):
   - LSTM        : sequence of the provider's / beneficiary's recent claims (temporal behaviour)

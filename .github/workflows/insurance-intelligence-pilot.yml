@@ -1,0 +1,109 @@
+name: Insurance Intelligence and OW-ERF v0.2 pilot
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "policy_recommender.py"
+      - "data/demo_policy_catalog.json"
+      - "data/demo_customer_profile.json"
+      - "tests/test_policy_recommender.py"
+      - "owerf_v02_benchmark.py"
+      - "tests/test_owerf_v02_benchmark.py"
+      - ".github/workflows/insurance-intelligence-pilot.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "policy_recommender.py"
+      - "data/demo_policy_catalog.json"
+      - "data/demo_customer_profile.json"
+      - "tests/test_policy_recommender.py"
+      - "owerf_v02_benchmark.py"
+      - "tests/test_owerf_v02_benchmark.py"
+      - ".github/workflows/insurance-intelligence-pilot.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install runtime and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install hdbscan
+      - name: Run policy recommendation and OW-ERF tests
+        run: python -m pytest tests/test_policy_recommender.py tests/test_owerf_v02_benchmark.py -v
+      - name: Run customer policy recommendation demo
+        run: |
+          python policy_recommender.py --profile data/demo_customer_profile.json --catalog data/demo_policy_catalog.json --top-k 3 --output results/policy_recommendations_demo.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("results/policy_recommendations_demo.json").read_text())
+          assert len(report["recommendations"]) == 3
+          assert report["demo_catalogue"] is True
+          assert all("reasons" in row and "cautions" in row for row in report["recommendations"])
+          print("PASS: policy recommendations, explanations and caution fields are present.")
+          PY
+      - name: Train and evaluate the v0.2 OW-ERF pilot across four held-out mechanisms
+        run: |
+          python owerf_v02_benchmark.py --n-samples 2400 --epochs 2 --batch-size 128 --hidden all --tier 2 --seed 42 --output-dir results/owerf_v02_pilot
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("results/owerf_v02_pilot/owerf_v02_synthetic_benchmark.json").read_text())
+          folds = report["folds"]
+          assert {m for fold in folds for m in fold["hidden_mechanisms"]} == {
+              "upcoding", "unbundling", "phantom_billing", "collusion"
+          }
+          assert len(folds) == 4
+          for fold in folds:
+              assert fold["train_claims"] + fold["selection_claims"] + fold["calibration_claims"] + fold["deployment_claims"] == fold["n_samples"]
+              assert fold["OW_ERF_novelty_metrics"]["roc_auc"] is not None
+              assert 0 <= fold["novel_recall_at_alpha"] <= 1
+              assert fold["edge_count"] == fold["n_samples"] * 6
+          print("PASS: four temporal held-out-mechanism folds produced valid reports.")
+          PY
+      - name: Commit reproducible demo outputs on main
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/policy_recommendations_demo.json results/owerf_v02_pilot/owerf_v02_synthetic_benchmark.json
+          if git diff --cached --quiet; then
+            echo "Demo result artifacts have not changed."
+            exit 0
+          fi
+          git commit -m "results: record policy recommender and OW-ERF v0.2 pilot"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push raced with another main update (attempt $attempt); retrying after rebase."
+            sleep $((attempt * 2))
+          done
+          echo "Could not publish demo reports after 5 attempts."
+          exit 1
+      - name: Upload complete pilot artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: insurance-intelligence-owerf-v02-pilot
+          path: |
+            results/policy_recommendations_demo.json
+            results/owerf_v02_pilot/**
+          if-no-files-found: error

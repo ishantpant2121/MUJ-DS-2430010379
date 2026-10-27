@@ -1,0 +1,12 @@
+{
+  "age": 34,
+  "family_size": 4,
+  "annual_budget_inr": 25000,
+  "desired_sum_insured_inr": 1000000,
+  "health_needs": ["diabetes"],
+  "required_benefits": ["maternity", "daycare", "no_room_rent_cap"],
+  "max_pre_existing_wait_months": 24,
+  "prefer_no_room_rent_cap": true,
+  "city": "Jaipur",
+  "min_cashless_hospitals": 50
+}

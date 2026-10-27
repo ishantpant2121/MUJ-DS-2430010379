@@ -1,6 +1,6 @@
 # OW-ERF Installation and Run Guide
 
-This guide runs the current **tabular synthetic-data prototype**. It does not install or train the experimental deep-learning branches.
+This guide covers the policy recommendation demo, the earlier tabular OW-ERF baseline, the deep synthetic experiment, the new OW-ERF v0.2 relational pilot, and the separate public provider-level benchmark.
 
 ## Requirements
 
@@ -67,7 +67,7 @@ A saved result table is available at [results/results.txt](results/results.txt).
 python -m pytest -v
 ```
 
-The last recorded test run reported **7 passed, 1 skipped**. The skip is associated with the optional PyTorch tests; this status should be rechecked in the environment used for submission.
+The CI suite runs the ordinary unit tests on Python 3.11 and 3.12. PyTorch-focused tests run in dedicated workflows that install CPU PyTorch; check the linked Actions run for the exact commit and results.
 
 ## 6. Run the deep prototype
 
@@ -117,10 +117,64 @@ The workflow writes the report to `results/public_provider_fraud_report.json`, t
 
 Latest recorded held-out test run (seed 42): Logistic Regression selected using validation average precision achieved ROC-AUC 0.956, average precision 0.754, precision 0.629, recall 0.723 and F1 0.673, at a validation-calibrated false-positive rate of 4.38%. The exact metrics, split sizes, file hashes and feature names are in `results/public_provider_fraud_report.json`. These are provider-level `PotentialFraud` benchmark results, not claim-level OW-ERF mechanism validation.
 
+## 8. Run the policy recommendation demo
+
+The demo uses a fictional catalogue in `data/demo_policy_catalog.json` and a sample profile in `data/demo_customer_profile.json`. It is a software fixture, not a real product comparison.
+
+```bash
+python policy_recommender.py --profile data/demo_customer_profile.json --catalog data/demo_policy_catalog.json --top-k 3 --output results/policy_recommendations_demo.json
+python -m pytest tests/test_policy_recommender.py -v
+```
+
+For a real catalogue, provide verified current premium, sum-insured, benefits, waiting-period, exclusion, co-pay, sub-limit and cashless-network facts. The clause parser is a rule-based baseline and must not be treated as authoritative policy/legal interpretation. See [IRDAI health-insurance guidance](https://irdai.gov.in/health-dept).
+
+## 9. Run the OW-ERF v0.2 temporal relational pilot
+
+```bash
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+python -m pip install hdbscan
+python owerf_v02_benchmark.py --n-samples 2400 --epochs 2 --batch-size 128 --hidden all --tier 2 --seed 42 --output-dir results/owerf_v02_pilot
+python -m pytest tests/test_owerf_v02_benchmark.py -v
+```
+
+The runner executes four chronological held-out-mechanism folds (one per mechanism). It writes aggregate metrics to `results/owerf_v02_pilot/owerf_v02_synthetic_benchmark.json` and per-fold reports, predictions, generated graph edges and hidden evaluation truth under mechanism-specific directories. The last table must remain separate from model inputs and is for evaluation only.
+
+This is a parametric pilot with causal relation summaries—not a full PyG HGT/R-GCN graph and not an implementation of every experiment in the manuscript. Synthea ingestion and the verified HBP 2.2 mapping remain additional gates.
+
 ## Known limitations
 
 - Uses synthetic data only.
-- Current evaluated pipeline is tabular; it does not implement the proposed graph encoder.
+- The v0.2 temporal-relational pilot is not a full arbitrary-node PyG HGT/R-GCN implementation.
 - The Isolation Forest comparison is a baseline, not a comprehensive benchmark.
-- The deep-learning branches are not trained or evaluated.
+- The LSTM/CNN/Transformer and relation-specific attention prototypes are trained on generated synthetic inputs only.
 - Results should not be generalized to real-world claims without appropriate datasets and validation.
+
+## 10. Independently train/test LSTM, CNN and Transformer
+
+This benchmark gives each architecture its own classifier rather than relying only on a fused LSTM/CNN/Transformer result.
+
+```bash
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 5 --batch-size 128 --seeds 42,43,44 --hidden all --output-dir results/standalone_deep_models
+python -m pytest tests/test_standalone_deep_models.py -v
+```
+
+The run performs 36 fits (three models × four leave-one-mechanism-out folds × three generator seeds). The training, validation, known-only calibration and test windows are separate; the withheld mechanism is excluded from training, validation and calibration. A checkpoint is selected on validation cross-entropy.
+
+Metrics include multiclass known-class accuracy/macro-F1/balanced accuracy (calculated only on test rows from classes seen during training), novel-mechanism AUROC/Average Precision, FPR at 95% novel recall, conformal novel recall and known false-rejection at alpha 0.05, rare-severe legitimate rejection and Precision@K.
+
+Outputs: `results/standalone_deep_models/standalone_deep_model_metrics.json`, `results/standalone_deep_models/standalone_deep_model_metrics.csv`, and weights for all 36 fits under `results/standalone_deep_models/weights/`. The dedicated GitHub Actions workflow validates the run and commits these artifacts on `main`.
+
+
+
+## 11. Launch the interactive application
+
+Install the optional app dependency and run the UI:
+
+~~~bash
+python -m pip install -r requirements-app.txt
+streamlit run app.py
+~~~
+
+The application includes customer policy matching, the OW-ERF v0.2 pilot, the public provider-level model report, and a standalone LSTM/CNN/Transformer comparison. The last tab reads the reproducible metrics JSON/CSV once the dedicated benchmark workflow publishes them. Demo policy records remain fictional.
+
