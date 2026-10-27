@@ -104,6 +104,20 @@ Results: `results/standalone_deep_models/standalone_deep_model_metrics.json` (fu
 
 These are separate model baselines and a synthetic benchmark. The reported known-class accuracy excludes the held-out mechanism; the novelty AUROC/AP treat the withheld fraud mechanism as a novelty-positive class. They are not real-insurance data results, and the three architectures use different input modalities by design.
 
+### Controlled architecture comparison using identical inputs
+
+The native comparison above gives each model its natural input modality, so differences can reflect both architecture and modality. A second, controlled experiment holds input representation fixed: LSTM, a continuous-input 1D-CNN, and Transformer all receive the same standardized relational-context tokens with the same padding mask. Only the architecture/sequence handling differs. Numeric scaling is fitted on training tokens only, padded positions are zeroed, validation loss selects checkpoints, and the test split remains untouched until evaluation.
+
+Reproduce the controlled comparison (25 epochs, 3 seeds, 4 held-out mechanisms for each mode; 72 model fits total):
+
+```bash
+python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 25 --batch-size 128 --seeds 42,43,44 --hidden all --input-mode native --output-dir results/controlled_deep_model_comparison/native_25ep
+python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 25 --batch-size 128 --seeds 42,43,44 --hidden all --input-mode shared_context --output-dir results/controlled_deep_model_comparison/shared_context_25ep
+python scripts/summarize_deep_comparison.py --native results/controlled_deep_model_comparison/native_25ep/standalone_deep_model_metrics.json --shared-context results/controlled_deep_model_comparison/shared_context_25ep/standalone_deep_model_metrics.json --output results/controlled_deep_model_comparison/controlled_comparison_summary.json
+```
+
+The dedicated GitHub Actions workflow validates both 36-run reports, builds a mean/SD comparison, and publishes metrics plus CI checkpoint artifacts. This comparison is synthetic and controls the input tensor; it does not establish real-claim performance or a statistically conclusive ranking with only three seeds.
+
 ### Recorded standalone deep-model results
 
 The dedicated CI run trained **36 independent models**: 3 architectures × 4 held-out mechanisms × 3 generator seeds. Values below are means ± standard deviations across the 12 held-out-mechanism/seed runs for each architecture, on synthetic data.

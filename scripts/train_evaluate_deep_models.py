@@ -25,6 +25,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.utils.rnn import pack_padded_sequence
 from sklearn.metrics import (
     accuracy_score,
     average_precision_score,
@@ -60,8 +61,15 @@ class LSTMClaimClassifier(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.classifier = nn.Linear(hidden_dim, n_classes)
 
-    def forward(self, x: torch.Tensor):
-        _, (h_n, _) = self.encoder(x)
+    def forward(self, x: torch.Tensor, padding_mask: torch.Tensor | None = None):
+        if padding_mask is None:
+            _, (h_n, _) = self.encoder(x)
+        else:
+            # Context sequences are padded only at the end. Packing makes the
+            # LSTM ignore padding in the controlled shared-input comparison.
+            lengths = (~padding_mask).sum(dim=1).clamp(min=1).detach().cpu()
+            packed = pack_padded_sequence(x, lengths, batch_first=True, enforce_sorted=False)
+            _, (h_n, _) = self.encoder(packed)
         embedding = self.dropout(self.norm(h_n[-1]))
         return embedding, self.classifier(embedding)
 
@@ -86,6 +94,33 @@ class CNNClaimClassifier(nn.Module):
             x = self.dropout(F.relu(norm(conv(x))))
         pooled = torch.cat([x.mean(dim=-1), x.amax(dim=-1)], dim=-1)
         embedding = self.projection(pooled)
+        return embedding, self.classifier(embedding)
+
+
+class CNNContinuousContextClassifier(nn.Module):
+    """1D-CNN over continuous context tokens for a same-input architecture ablation."""
+    def __init__(self, input_dim: int, n_classes: int, dropout: float = 0.2):
+        super().__init__()
+        self.convs = nn.ModuleList([
+            nn.Conv1d(input_dim, 48, kernel_size=3, padding=1),
+            nn.Conv1d(48, 48, kernel_size=5, padding=2),
+        ])
+        self.norms = nn.ModuleList([nn.BatchNorm1d(48), nn.BatchNorm1d(48)])
+        self.dropout = nn.Dropout(dropout)
+        self.projection = nn.Sequential(nn.Linear(96, 48), nn.ReLU(), nn.LayerNorm(48))
+        self.classifier = nn.Linear(48, n_classes)
+
+    def forward(self, tokens: torch.Tensor, padding_mask: torch.Tensor):
+        x = tokens.transpose(1, 2)
+        mask = padding_mask.unsqueeze(1)
+        for conv, norm in zip(self.convs, self.norms):
+            x = self.dropout(F.relu(norm(conv(x))))
+            x = x.masked_fill(mask, 0.0)
+        valid = (~padding_mask).unsqueeze(1).to(dtype=x.dtype)
+        denom = valid.sum(dim=-1).clamp(min=1.0)
+        mean_pool = (x * valid).sum(dim=-1) / denom
+        max_pool = x.masked_fill(mask, torch.finfo(x.dtype).min).amax(dim=-1)
+        embedding = self.projection(torch.cat([mean_pool, max_pool], dim=-1))
         return embedding, self.classifier(embedding)
 
 
@@ -130,11 +165,23 @@ def _set_seed(seed: int) -> None:
     torch.set_num_threads(1)
 
 
-def _make_model(name: str, n_classes: int, input_dims: dict[str, int], device: torch.device) -> nn.Module:
+def _make_model(
+    name: str, n_classes: int, input_dims: dict[str, int], device: torch.device,
+    input_mode: str = "native",
+) -> nn.Module:
+    if input_mode not in {"native", "shared_context"}:
+        raise ValueError(f"Unknown input_mode: {input_mode}")
     if name == "LSTM":
-        model = LSTMClaimClassifier(input_dims["history"], n_classes)
+        model = LSTMClaimClassifier(
+            input_dims["context"] if input_mode == "shared_context" else input_dims["history"],
+            n_classes,
+        )
     elif name == "CNN1D":
-        model = CNNClaimClassifier(CODE_VOCAB, n_classes)
+        model = (
+            CNNContinuousContextClassifier(input_dims["context"], n_classes)
+            if input_mode == "shared_context"
+            else CNNClaimClassifier(CODE_VOCAB, n_classes)
+        )
     elif name == "Transformer":
         model = TransformerClaimClassifier(input_dims["context"], n_classes)
     else:
@@ -146,8 +193,29 @@ def _prepare_inputs(
     name: str,
     data: dict[str, np.ndarray],
     train_ids: np.ndarray,
+    input_mode: str = "native",
 ) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
-    """Fit any numeric scaling only on training rows; CNN consumes categorical code IDs."""
+    """Fit scaling only on training rows; shared mode uses the same context tokens."""
+    if input_mode not in {"native", "shared_context"}:
+        raise ValueError(f"Unknown input_mode: {input_mode}")
+    if input_mode == "shared_context":
+        fit_tokens = data["ctx"][train_ids]
+        fit_mask = data["ctx_pad_mask"][train_ids].astype(bool)
+        valid_tokens = fit_tokens[~fit_mask]
+        scaler = StandardScaler().fit(valid_tokens)
+        transformed = scaler.transform(data["ctx"].reshape(-1, data["ctx"].shape[-1]))
+        x = transformed.reshape(data["ctx"].shape).astype(np.float32)
+        padding_mask = data["ctx_pad_mask"].astype(bool)
+        x[padding_mask] = 0.0
+        return {"x": x, "padding_mask": padding_mask}, {
+            "input_mode": "shared_context",
+            "input_type": "standardized_relational_context_tokens_shared_by_all_architectures",
+            "scaler_fit_rows": int(len(valid_tokens)),
+            "scaler_mean": scaler.mean_.tolist(),
+            "scaler_scale": scaler.scale_.tolist(),
+            "padding_mask_used": True,
+            "padding_values_after_scaling": "zero",
+        }
     if name == "LSTM":
         scaler = StandardScaler().fit(data["hist"][train_ids].reshape(-1, data["hist"].shape[-1]))
         transformed = scaler.transform(data["hist"].reshape(-1, data["hist"].shape[-1]))
@@ -182,6 +250,7 @@ def _prepare_inputs(
 def _forward_batch(
     model: nn.Module, name: str, x: np.ndarray, ids: np.ndarray,
     device: torch.device, padding_mask: np.ndarray | None = None,
+    input_mode: str = "native",
 ) -> tuple[np.ndarray, np.ndarray]:
     model.eval()
     embeddings: list[np.ndarray] = []
@@ -190,11 +259,11 @@ def _forward_batch(
         for start in range(0, len(ids), 256):
             batch_ids = ids[start:start + 256]
             xb = torch.as_tensor(x[batch_ids], device=device)
-            if name == "CNN1D":
+            if name == "CNN1D" and input_mode == "native":
                 xb = xb.long()
             else:
                 xb = xb.float()
-            if name == "Transformer":
+            if input_mode == "shared_context" or name == "Transformer":
                 mask = torch.as_tensor(padding_mask[batch_ids], device=device, dtype=torch.bool)
                 emb, logits = model(xb, mask)
             else:
@@ -244,16 +313,17 @@ def _fit_one_model(
     seed: int,
     output_dir: Path,
     save_weights: bool,
+    input_mode: str = "native",
 ) -> dict[str, Any]:
     _set_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    prepared, preprocessing = _prepare_inputs(name, data, train_ids)
+    prepared, preprocessing = _prepare_inputs(name, data, train_ids, input_mode=input_mode)
     x = prepared["x"]
     pad_mask = prepared.get("padding_mask")
     model = _make_model(name, len(known_original), {
         "history": data["hist"].shape[-1],
         "context": data["ctx"].shape[-1],
-    }, device)
+    }, device, input_mode=input_mode)
 
     class_counts = np.bincount(y_mapped[train_ids], minlength=len(known_original)).astype(float)
     if np.any(class_counts == 0):
@@ -276,9 +346,9 @@ def _fit_one_model(
             if len(ids) < 8:
                 continue
             xb = torch.as_tensor(x[ids], device=device)
-            xb = xb.long() if name == "CNN1D" else xb.float()
+            xb = xb.long() if (name == "CNN1D" and input_mode == "native") else xb.float()
             yb = torch.as_tensor(y_mapped[ids], dtype=torch.long, device=device)
-            if name == "Transformer":
+            if input_mode == "shared_context" or name == "Transformer":
                 mask = torch.as_tensor(pad_mask[ids], dtype=torch.bool, device=device)
                 _, logits = model(xb, mask)
             else:
@@ -294,7 +364,7 @@ def _fit_one_model(
         if not losses:
             raise RuntimeError(f"No {name} training batches were processed.")
         train_loss_history.append(float(np.mean(losses)))
-        _, val_logits = _forward_batch(model, name, x, val_ids, device, pad_mask)
+        _, val_logits = _forward_batch(model, name, x, val_ids, device, pad_mask, input_mode=input_mode)
         val_loss = float(F.cross_entropy(
             torch.as_tensor(val_logits, dtype=torch.float32),
             torch.as_tensor(y_mapped[val_ids], dtype=torch.long),
@@ -307,10 +377,10 @@ def _fit_one_model(
     if best_state is None:
         raise RuntimeError(f"No valid {name} checkpoint was selected.")
     model.load_state_dict(best_state)
-    train_embeddings, train_logits = _forward_batch(model, name, x, train_ids, device, pad_mask)
-    val_embeddings, val_logits = _forward_batch(model, name, x, val_ids, device, pad_mask)
-    cal_embeddings, cal_logits = _forward_batch(model, name, x, cal_ids, device, pad_mask)
-    test_embeddings, test_logits = _forward_batch(model, name, x, test_ids, device, pad_mask)
+    train_embeddings, train_logits = _forward_batch(model, name, x, train_ids, device, pad_mask, input_mode=input_mode)
+    val_embeddings, val_logits = _forward_batch(model, name, x, val_ids, device, pad_mask, input_mode=input_mode)
+    cal_embeddings, cal_logits = _forward_batch(model, name, x, cal_ids, device, pad_mask, input_mode=input_mode)
+    test_embeddings, test_logits = _forward_batch(model, name, x, test_ids, device, pad_mask, input_mode=input_mode)
 
     train_y = y_mapped[train_ids]
     energy_val, energy_cal, energy_test = _energy(val_logits), _energy(cal_logits), _energy(test_logits)
@@ -366,9 +436,11 @@ def _fit_one_model(
     if save_weights:
         weights_dir = output_dir / "weights"
         weights_dir.mkdir(parents=True, exist_ok=True)
-        save_path = weights_dir / f"{name.lower()}_hidden_{MECHANISMS[hidden_id - 1]}_seed_{seed}.pt"
+        mode_prefix = "" if input_mode == "native" else f"{input_mode.lower()}_"
+        save_path = weights_dir / f"{mode_prefix}{name.lower()}_hidden_{MECHANISMS[hidden_id - 1]}_seed_{seed}.pt"
         checkpoint = {
             "model_name": name,
+            "input_mode": input_mode,
             "hidden_mechanism": MECHANISMS[hidden_id - 1],
             "known_original_labels": known_original,
             "state_dict": best_state,
@@ -378,6 +450,7 @@ def _fit_one_model(
                 "history_dim": int(data["hist"].shape[-1]),
                 "context_dim": int(data["ctx"].shape[-1]),
                 "code_vocab": int(CODE_VOCAB),
+                "input_mode": input_mode,
                 "best_epoch": best_epoch,
                 "seed": seed,
             },
@@ -390,6 +463,7 @@ def _fit_one_model(
 
     return {
         "model": name,
+        "input_mode": input_mode,
         "hidden_mechanism": MECHANISMS[hidden_id - 1],
         "seed": seed,
         "model_seed": seed,
@@ -432,7 +506,10 @@ def run_benchmark(
     output_dir: str = "results/standalone_deep_models",
     save_weights: bool = True,
     hidden_mechanisms: tuple[str, ...] = MECHANISMS,
+    input_mode: str = "native",
 ) -> dict[str, Any]:
+    if input_mode not in {"native", "shared_context"}:
+        raise ValueError("input_mode must be 'native' or 'shared_context'.")
     if n_samples < 1000:
         raise ValueError("Use at least 1000 claims for stable split coverage.")
     if epochs < 1 or batch_size < 8:
@@ -489,6 +566,7 @@ def run_benchmark(
                     seed=model_seed,
                     output_dir=output,
                     save_weights=save_weights,
+                    input_mode=input_mode,
                 )
                 result["data_seed"] = seed
                 result["train_validation_calibration_protocol"] = "stratified train pool; 15% known-only validation; separate known-only calibration window; untouched held-out test partition"
@@ -516,7 +594,13 @@ def run_benchmark(
     report = {
         "experiment": "standalone LSTM vs 1D-CNN vs Transformer under leave-one-mechanism-out",
         "scope": "synthetic data only; no real patient or insurance claim data",
-        "purpose": "separately train and evaluate each architecture on the same multimodal synthetic benchmark",
+        "purpose": "separately train and evaluate each architecture on the same synthetic benchmark",
+        "input_mode": input_mode,
+        "comparison_design": (
+            "native mode: architecture and input modality vary together"
+            if input_mode == "native"
+            else "controlled mode: all architectures receive the same standardized context tensor and padding mask"
+        ),
         "metrics_semantics": {
             "known_class_accuracy": "multiclass accuracy on test claims from classes seen during training; held-out mechanism excluded from this metric",
             "novel_mechanism_auroc": "held-out fraud mechanism positive vs every non-held-out test claim, using fused energy/Mahalanobis novelty",
@@ -530,6 +614,7 @@ def run_benchmark(
             "seeds": list(seeds),
             "hidden_mechanisms": list(hidden_mechanisms),
             "models": list(MODEL_NAMES),
+            "input_mode": input_mode,
             "alpha": ALPHA,
         },
         "split_protocol": "same generator seed and stratified train/calibration/test partition across model architectures; hidden mechanism excluded from train, validation and calibration",
@@ -538,7 +623,8 @@ def run_benchmark(
         "limitations": [
             "Synthetic generator contains designed proxies for each mechanism; metrics measure performance on this generator only.",
             "A held-out mechanism is evaluated as novelty; it is not a separately supervised output class.",
-            "The three architectures are trained independently, not as the same fused encoder, so the comparison isolates their input modality/architecture choices but modalities differ as intended by the paper.",
+            "The three architectures are trained independently, not as the same fused encoder.",
+            "Native mode varies input modality; shared_context mode supplies identical standardized context tokens and a padding mask to all three architectures.",
             "Temporal graph encoder and public provider-level benchmark are separate experiments and not combined into this standalone comparison.",
             "Three seeds provide an initial stability check, not publication-grade confidence intervals; complete the registered seed/ablation plan before submission.",
         ],
@@ -549,7 +635,7 @@ def run_benchmark(
     # Compact CSV with one row per architecture / held-out mechanism / seed.
     import csv
     fieldnames = [
-        "model", "hidden_mechanism", "data_seed", "best_epoch",
+        "model", "input_mode", "hidden_mechanism", "data_seed", "best_epoch",
         "known_class_accuracy", "known_class_macro_f1", "known_class_balanced_accuracy",
         "known_test_fraud_vs_benign_metrics", "novel_mechanism_auroc",
         "novel_mechanism_average_precision", "false_positive_rate_at_95pct_novel_recall",
@@ -571,6 +657,8 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--seeds", default="42,43,44", help="comma-separated generator seeds")
     parser.add_argument("--hidden", default="all", help="one mechanism, comma-separated mechanisms, or 'all'")
+    parser.add_argument("--input-mode", choices=("native", "shared_context"), default="native",
+                        help="native uses model-specific modalities; shared_context controls the input across architectures")
     parser.add_argument("--output-dir", default="results/standalone_deep_models")
     parser.add_argument("--no-save-weights", action="store_true")
     args = parser.parse_args()
@@ -579,7 +667,7 @@ def main() -> None:
     report = run_benchmark(
         n_samples=args.n_samples, epochs=args.epochs, batch_size=args.batch_size,
         seeds=seeds, output_dir=args.output_dir, save_weights=not args.no_save_weights,
-        hidden_mechanisms=hidden,
+        hidden_mechanisms=hidden, input_mode=args.input_mode,
     )
     print(json.dumps({"summary_by_model": report["summary_by_model"], "report_path": str(Path(args.output_dir) / "standalone_deep_model_metrics.json")}, indent=2))
 
