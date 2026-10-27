@@ -205,3 +205,30 @@ These metrics are for **provider-level benchmark classification only**. They do 
 - **Dr. Sandeep Gupta** — research supervisor.
 
 Bibliography entries retain the names of researchers whose publications are cited; those citations credit external research and do not identify additional project team members.
+
+
+## Temporal heterogeneous graph research implementation
+
+The research branch adds an explicit typed-node temporal graph encoder and an end-to-end synthetic benchmark:
+- Encoder: `owerf_temporal_heterograph.py`
+- Training/evaluation: `scripts/train_temporal_heterograph.py`
+- Tests: `tests/test_temporal_heterograph.py`
+- Protocol and limitations: `docs/TEMPORAL_HETEROGRAPH_MODEL.md`
+- Submission checklist: `docs/FINAL_SUBMISSION_CHECKLIST.md`
+
+Run the complete synthetic sweep (4 held-out mechanisms × 3 seeds):
+
+```bash
+python -m pip install -r requirements.txt -r requirements-deep.txt
+python -m pytest -q tests/test_temporal_heterograph.py
+python scripts/train_temporal_heterograph.py --n-samples 2400 --epochs 8 --batch-size 64 --patience 3 --seeds 42,43,44 --hidden all --output-dir results/temporal_heterograph_full
+```
+
+The model uses explicit Claim, Beneficiary, Hospital, Doctor, Admission, Package and Diagnosis nodes with relation-specific causal messages, recency features and relation attention. Since the current generator does not contain real admission records or ICD-10 diagnoses, the admission and diagnosis nodes are explicitly marked synthetic proxies. Results from the existing paper are from the earlier tabular, relation-summary and standalone deep-model experiments; do not cite the graph model as empirically validated until its full benchmark artifact has been reviewed. All current evidence remains synthetic and is not real claim-level fraud validation.
+
+
+### Data-source adapters and provenance checks
+
+- Synthea CSV graph adapter: `python scripts/prepare_synthea_graph.py --input-dir path/to/output/csv --output-dir data/prepared_synthea_graph`. It writes typed nodes, timestamped edges and a hash manifest. Synthea is synthetic health data and does not supply fraud labels; this adapter does not report fraud-classification performance.
+- HBP package-rate review: copy `data/hbp_package_catalog_template.csv` to a separately reviewed catalogue, transcribe source-verified rows only, then run `python scripts/validate_hbp_catalog.py --input data/hbp_package_catalog.csv --output results/hbp_catalog_validation.json`. The checker validates row structure and provenance fields, not the truth of rates; every rate must be checked against the official source page by a human reviewer.
+- Data ingestion checks: `python -m pytest -q tests/test_data_ingestion.py`.
