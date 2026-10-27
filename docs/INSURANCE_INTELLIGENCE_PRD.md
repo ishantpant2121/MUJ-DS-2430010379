@@ -111,6 +111,17 @@ The v0.2 relational pilot adds timestamped relation edges, past-only entity summ
 
 The public healthcare-provider dataset benchmark predicts provider-level PotentialFraud; it is not claim-level ground truth for OW-ERF's four mechanisms. It must remain a separate result.
 
+## 8A. Controlled LSTM/CNN/Transformer architecture ablation
+
+The initial native comparison and the controlled same-input comparison answer different questions. In native mode, the LSTM sees claim-history features, the CNN sees procedure-code IDs, and the Transformer sees relational-context tokens; therefore architecture and modality vary together. The 25-epoch controlled pilot gives all models the same standardized 6-by-16 relational-context tensor and padding mask. The scaler is fitted only on valid training tokens, padding is zeroed, the LSTM packs valid lengths, the CNN uses mask-aware pooling, and the Transformer uses its key-padding mask.
+
+Across 3 generator seeds × 4 held-out mechanisms, the measured shared-context means ± SD were:
+- LSTM: known-class accuracy 0.968 ± 0.016; novel-mechanism AUROC 0.701 ± 0.209; AP 0.152 ± 0.092; novel recall at alpha 0.05 = 0.229 ± 0.183.
+- 1D-CNN: accuracy 0.970 ± 0.019; AUROC 0.756 ± 0.167; AP 0.185 ± 0.137; novel recall 0.297 ± 0.268.
+- Transformer: accuracy 0.978 ± 0.010; AUROC 0.806 ± 0.104; AP 0.179 ± 0.134; novel recall 0.323 ± 0.254.
+
+The comparison strongly indicates that the large native accuracy gap for LSTM/CNN is partly driven by which features each branch receives. The Transformer has identical native/shared results because its native input was already the shared-context tensor. Novel recall remains low/highly variable and the Transformer known false-rejection rate is slightly above the nominal 5% threshold. The LSTM/CNN validation-selected epochs were near the 25-epoch cap, so the longer controlled run is being repeated at a 60-epoch cap. This remains a synthetic experiment with three seeds, not a statistically definitive ranking and not evidence of real insurance-claim performance.
+
 ## 9. Ethical and regulatory guardrails
 
 - Do not make automatic claim-denial or settlement decisions.
