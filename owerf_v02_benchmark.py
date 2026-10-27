@@ -144,6 +144,7 @@ def generate_synthetic_claim_graph(
             provider[i] = int(i % max(1, n_providers - ring_size))
             provider[i] = int(provider[i] // ring_size * ring_size)
         referral_target[i] = ring_map.get(int(provider[i]), int((provider[i] + 1) % n_providers))
+    hospital = provider % n_hospitals
 
     # Benign but clinically extreme claims: severe, well-documented and not fraud-labelled.
     benign_outlier = (labels == 0) & (rng.random(n_samples) < benign_outlier_rate)
@@ -571,6 +572,10 @@ def run_fold(
 
     label_name = np.asarray(["benign"] + list(MECHANISMS), dtype=object)[test_labels]
     test_predictions = []
+    cluster_for_local = {
+        int(local_index): int(cluster_value)
+        for local_index, cluster_value in zip(np.flatnonzero(escalated), cluster_labels)
+    }
     for local_i, global_i in enumerate(test_ids):
         test_predictions.append({
             "claim_id": f"CLM{global_i:07d}",
@@ -586,7 +591,7 @@ def run_fold(
             "escalated_to_suspicious_pool": bool(escalated[local_i]),
             "audit_priority": float(priority[local_i]),
             "predicted_known_class": int(pred_known[local_i]),
-            "cluster_label": int(cluster_labels[np.flatnonzero(escalated)[list(np.flatnonzero(escalated)).index(local_i)]]) if escalated[local_i] and local_i in np.flatnonzero(escalated) else -1,
+            "cluster_label": cluster_for_local.get(int(local_i), -1),
         })
 
     report: dict[str, Any] = {
