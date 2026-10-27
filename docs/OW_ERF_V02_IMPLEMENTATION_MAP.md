@@ -31,6 +31,16 @@ Implemented in the current pilot:
 - Baselines implemented in this pilot: Random Forest (one minus maximum known-class probability) and Isolation Forest trained on legitimate training claims.
 - The separate **owerf_deep_experiment.py** remains an LSTM/CNN/Transformer synthetic prototype; it is not the same as the causal relational encoder pilot.
 
+## Separately trained LSTM/CNN/Transformer baselines
+
+The three standalone encoders are implemented in `scripts/train_evaluate_deep_models.py` and each is trained as its own known-class classifier under the same leave-one-mechanism-out data splits:
+
+- **LSTM:** two-layer recurrent encoder over the ordered 10-step, six-channel history sequence.
+- **1D-CNN:** token embedding and two convolution blocks over 14 ordered procedure/line-item tokens.
+- **Transformer:** two-layer Transformer encoder with a CLS token and padding mask over six relational-context tokens.
+
+A disjoint known-only validation partition chooses the checkpoint; a separate known-only calibration partition fits the energy/Mahalanobis novelty transform and split-conformal p-values; the untouched test partition reports known-class accuracy/macro-F1 and held-out-mechanism novelty metrics. The dedicated workflow runs 3 generator seeds × 4 withheld mechanisms × 3 models = 36 fits. Result and weight paths are listed in the root README and the report records the metric semantics. Different input modalities mean this is a comparison of architecture-plus-modality pipelines, not a controlled comparison where all models consume identical tensors.
+
 ## Explicit gaps against the manuscript's full protocol
 
 The following are **not yet complete** and must not be claimed as done:
