@@ -148,3 +148,20 @@ This is a parametric pilot with causal relation summaries—not a full PyG HGT/R
 - The Isolation Forest comparison is a baseline, not a comprehensive benchmark.
 - The LSTM/CNN/Transformer and relation-specific attention prototypes are trained on generated synthetic inputs only.
 - Results should not be generalized to real-world claims without appropriate datasets and validation.
+
+## 10. Independently train/test LSTM, CNN and Transformer
+
+This benchmark gives each architecture its own classifier rather than relying only on a fused LSTM/CNN/Transformer result.
+
+```bash
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 5 --batch-size 128 --seeds 42,43,44 --hidden all --output-dir results/standalone_deep_models
+python -m pytest tests/test_standalone_deep_models.py -v
+```
+
+The run performs 36 fits (three models × four leave-one-mechanism-out folds × three generator seeds). The training, validation, known-only calibration and test windows are separate; the withheld mechanism is excluded from training, validation and calibration. A checkpoint is selected on validation cross-entropy.
+
+Metrics include multiclass known-class accuracy/macro-F1/balanced accuracy (calculated only on test rows from classes seen during training), novel-mechanism AUROC/Average Precision, FPR at 95% novel recall, conformal novel recall and known false-rejection at alpha 0.05, rare-severe legitimate rejection and Precision@K.
+
+Outputs: `results/standalone_deep_models/standalone_deep_model_metrics.json`, `results/standalone_deep_models/standalone_deep_model_metrics.csv`, and weights for all 36 fits under `results/standalone_deep_models/weights/`. The dedicated GitHub Actions workflow validates the run and commits these artifacts on `main`.
+
