@@ -18,7 +18,7 @@ This checklist separates artifacts built in the repository from actions that req
 ## Before submission
 
 - [ ] Review the temporal heterogeneous graph pull request and confirm CI has passed; merge it only after checks pass.
-- [ ] Run or download the full graph benchmark artifact and update the paper with its actual metrics. Do not paste smoke metrics into the paper as if they were final study results.
+- [x] Ran and reviewed the full 12-run graph benchmark; its measured results are added to the paper and committed under results/temporal_heterograph_full/.
 - [ ] Verify cited publications claim-by-claim against source publications and confirm all external URLs.
 - [ ] If required, transcribe a small HBP package/rate subset from the official NHA document, recording source page, version, review date and reviewer; do not represent synthetic placeholder rates as official rates.
 - [ ] If a Synthea release is used, pin its release/commit and exporter configuration. Treat Synthea as synthetic clinical data, not fraud-labeled ground truth.
@@ -34,5 +34,5 @@ This checklist separates artifacts built in the repository from actions that req
 - The provider-level PotentialFraud task is separate from claim-level fraud-mechanism evaluation.
 - Synthea provides synthetic health-care trajectories but does not label insurance fraud mechanisms. It cannot by itself establish claim-level fraud detection performance.
 - The graph module's current admission and diagnosis nodes are proxies, and the model is a dependency-light R-GCN/HGT-style implementation rather than canonical PyG HGTConv/RGCNConv.
-- The full graph benchmark is only considered empirically complete once its workflow produces an artifact from the complete 4-fold × 3-seed protocol and the metrics are reviewed.
+- The first 4-fold × 3-seed graph benchmark is complete, but the broader baseline/ablation, real-data validation and provenance checks are still pending.
 - No model is ready to make automated adverse claim decisions; it remains a research/audit-triage prototype requiring human review and external validation.
