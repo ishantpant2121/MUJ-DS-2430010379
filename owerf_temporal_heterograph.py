@@ -111,7 +111,7 @@ class TemporalHeteroGraphEncoder(nn.Module):
     Each entity node starts with a learned node-type embedding and a log-history
     degree feature, then aggregates transformed historical claim messages with
     recency weighting. Query claims receive typed entity messages and attend over
-    the six relation channels. No claim label is part of an input node feature.
+    the eight relation channels, including provider and referral-target roles. No claim label is part of an input node feature.
     """
 
     def __init__(self, n_features: int, n_classes: int, hidden_dim: int = 48,
