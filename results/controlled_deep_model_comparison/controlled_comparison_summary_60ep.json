@@ -1,0 +1,298 @@
+{
+  "experiment": "controlled LSTM vs CNN1D vs Transformer comparison",
+  "scope": "synthetic data only; no real patient or insurance claim data",
+  "design": "Paired generator seeds and held-out-mechanism folds. Native mode uses each architecture's intended modality; shared_context mode supplies identical standardized context tokens and padding masks to all three. Preprocessing is fitted on training rows only, model checkpoint selection uses validation loss, calibration is disjoint, and held-out test data are used once for final metrics.",
+  "configuration": {
+    "n_samples_per_dataset_seed": 2400,
+    "epochs": 60,
+    "batch_size": 128,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "hidden_mechanisms": [
+      "upcoding",
+      "unbundling",
+      "phantom_billing",
+      "collusion"
+    ],
+    "alpha": 0.05,
+    "runs_per_mode": 36,
+    "total_model_fits": 72
+  },
+  "summary_rows": [
+    {
+      "model": "LSTM",
+      "metric": "known_class_accuracy",
+      "native_mean": 0.5194209039548022,
+      "native_std": 0.09782052641508467,
+      "native_n": 12,
+      "shared_context_mean": 0.979343220338983,
+      "shared_context_std": 0.01042332950492267,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.4599223163841808
+    },
+    {
+      "model": "LSTM",
+      "metric": "known_class_macro_f1",
+      "native_mean": 0.3759691320812502,
+      "native_std": 0.12320013532359082,
+      "native_n": 12,
+      "shared_context_mean": 0.9075269666101665,
+      "shared_context_std": 0.05392407437294021,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.5315578345289163
+    },
+    {
+      "model": "LSTM",
+      "metric": "known_class_balanced_accuracy",
+      "native_mean": 0.43398683176100633,
+      "native_std": 0.12163546644977928,
+      "native_n": 12,
+      "shared_context_mean": 0.9052918632075473,
+      "shared_context_std": 0.05205556621783965,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.47130503144654096
+    },
+    {
+      "model": "LSTM",
+      "metric": "novel_mechanism_auroc",
+      "native_mean": 0.53857697740113,
+      "native_std": 0.12998884160616625,
+      "native_n": 12,
+      "shared_context_mean": 0.7206865730932203,
+      "shared_context_std": 0.20974217401232528,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.1821095956920903
+    },
+    {
+      "model": "LSTM",
+      "metric": "novel_mechanism_average_precision",
+      "native_mean": 0.061408761353239465,
+      "native_std": 0.07302890018107515,
+      "native_n": 12,
+      "shared_context_mean": 0.1691137452063274,
+      "shared_context_std": 0.10543589328998074,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.10770498385308794
+    },
+    {
+      "model": "LSTM",
+      "metric": "novel_recall_at_conformal_alpha_005",
+      "native_mean": 0.057291666666666664,
+      "native_std": 0.108116405771602,
+      "native_n": 12,
+      "shared_context_mean": 0.25,
+      "shared_context_std": 0.16642975586223646,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.19270833333333334
+    },
+    {
+      "model": "LSTM",
+      "metric": "known_false_rejection_rate_at_conformal_alpha_005",
+      "native_mean": 0.051200564971751406,
+      "native_std": 0.009764725527792196,
+      "native_n": 12,
+      "shared_context_mean": 0.048375706214689264,
+      "shared_context_std": 0.019329933553060192,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": -0.0028248587570621417
+    },
+    {
+      "model": "LSTM",
+      "metric": "rare_severe_benign_false_rejection_rate",
+      "native_mean": 0.13426501035196686,
+      "native_std": 0.23517184166914773,
+      "native_n": 12,
+      "shared_context_mean": 0.033195307108350586,
+      "shared_context_std": 0.03686160127114193,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": -0.10106970324361628
+    },
+    {
+      "model": "CNN1D",
+      "metric": "known_class_accuracy",
+      "native_mean": 0.8963629943502825,
+      "native_std": 0.015943241854077188,
+      "native_n": 12,
+      "shared_context_mean": 0.9729872881355933,
+      "shared_context_std": 0.015934708069521412,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.07662429378531077
+    },
+    {
+      "model": "CNN1D",
+      "metric": "known_class_macro_f1",
+      "native_mean": 0.379458722981388,
+      "native_std": 0.0847235415686891,
+      "native_n": 12,
+      "shared_context_mean": 0.8654010802263371,
+      "shared_context_std": 0.09121528015050287,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.4859423572449491
+    },
+    {
+      "model": "CNN1D",
+      "metric": "known_class_balanced_accuracy",
+      "native_mean": 0.36974253144654085,
+      "native_std": 0.08032304805676357,
+      "native_n": 12,
+      "shared_context_mean": 0.8534050707547168,
+      "shared_context_std": 0.09758616038366158,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.483662539308176
+    },
+    {
+      "model": "CNN1D",
+      "metric": "novel_mechanism_auroc",
+      "native_mean": 0.5463674081920903,
+      "native_std": 0.13634450449500898,
+      "native_n": 12,
+      "shared_context_mean": 0.7591476871468926,
+      "shared_context_std": 0.17069787929874997,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.21278027895480234
+    },
+    {
+      "model": "CNN1D",
+      "metric": "novel_mechanism_average_precision",
+      "native_mean": 0.054906469875616,
+      "native_std": 0.032060449056711945,
+      "native_n": 12,
+      "shared_context_mean": 0.1880684495447139,
+      "shared_context_std": 0.14087258482358972,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.1331619796690979
+    },
+    {
+      "model": "CNN1D",
+      "metric": "novel_recall_at_conformal_alpha_005",
+      "native_mean": 0.078125,
+      "native_std": 0.10015967365797838,
+      "native_n": 12,
+      "shared_context_mean": 0.3541666666666667,
+      "shared_context_std": 0.3245772308525027,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.2760416666666667
+    },
+    {
+      "model": "CNN1D",
+      "metric": "known_false_rejection_rate_at_conformal_alpha_005",
+      "native_mean": 0.05296610169491525,
+      "native_std": 0.016261071586444863,
+      "native_n": 12,
+      "shared_context_mean": 0.05367231638418079,
+      "shared_context_std": 0.014520008831405548,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.0007062146892655372
+    },
+    {
+      "model": "CNN1D",
+      "metric": "rare_severe_benign_false_rejection_rate",
+      "native_mean": 0.060420979986197366,
+      "native_std": 0.05882765163193586,
+      "native_n": 12,
+      "shared_context_mean": 0.03467908902691511,
+      "shared_context_std": 0.040954843502688694,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": -0.025741890959282254
+    },
+    {
+      "model": "Transformer",
+      "metric": "known_class_accuracy",
+      "native_mean": 0.9826977401129944,
+      "native_std": 0.009071491934085565,
+      "native_n": 12,
+      "shared_context_mean": 0.9826977401129944,
+      "shared_context_std": 0.009071491934085565,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.0
+    },
+    {
+      "model": "Transformer",
+      "metric": "known_class_macro_f1",
+      "native_mean": 0.92595989712682,
+      "native_std": 0.04244202767939837,
+      "native_n": 12,
+      "shared_context_mean": 0.92595989712682,
+      "shared_context_std": 0.04244202767939837,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.0
+    },
+    {
+      "model": "Transformer",
+      "metric": "known_class_balanced_accuracy",
+      "native_mean": 0.9362961871069183,
+      "native_std": 0.03992261443275166,
+      "native_n": 12,
+      "shared_context_mean": 0.9362961871069183,
+      "shared_context_std": 0.03992261443275166,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.0
+    },
+    {
+      "model": "Transformer",
+      "metric": "novel_mechanism_auroc",
+      "native_mean": 0.8162517655367232,
+      "native_std": 0.09030820653012446,
+      "native_n": 12,
+      "shared_context_mean": 0.8162517655367232,
+      "shared_context_std": 0.09030820653012446,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.0
+    },
+    {
+      "model": "Transformer",
+      "metric": "novel_mechanism_average_precision",
+      "native_mean": 0.17350708701283424,
+      "native_std": 0.10266567628520154,
+      "native_n": 12,
+      "shared_context_mean": 0.17350708701283424,
+      "shared_context_std": 0.10266567628520154,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.0
+    },
+    {
+      "model": "Transformer",
+      "metric": "novel_recall_at_conformal_alpha_005",
+      "native_mean": 0.3489583333333333,
+      "native_std": 0.22841215322837846,
+      "native_n": 12,
+      "shared_context_mean": 0.3489583333333333,
+      "shared_context_std": 0.22841215322837846,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.0
+    },
+    {
+      "model": "Transformer",
+      "metric": "known_false_rejection_rate_at_conformal_alpha_005",
+      "native_mean": 0.061264124293785305,
+      "native_std": 0.020767395413181657,
+      "native_n": 12,
+      "shared_context_mean": 0.061264124293785305,
+      "shared_context_std": 0.020767395413181657,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.0
+    },
+    {
+      "model": "Transformer",
+      "metric": "rare_severe_benign_false_rejection_rate",
+      "native_mean": 0.0398895790200138,
+      "native_std": 0.040288786622088076,
+      "native_n": 12,
+      "shared_context_mean": 0.0398895790200138,
+      "shared_context_std": 0.040288786622088076,
+      "shared_context_n": 12,
+      "delta_shared_minus_native": 0.0
+    }
+  ],
+  "interpretation_guardrails": [
+    "Native comparison confounds architecture with input modality.",
+    "Shared-context comparison controls the input representation and is the appropriate architecture ablation, but uses a synthetic context representation rather than each modality's natural input.",
+    "All results are conditional on the synthetic generator; none establishes real-claims performance.",
+    "Small seed counts produce descriptive means/standard deviations, not a confirmatory statistical claim."
+  ],
+  "native_report": "results/controlled_deep_model_comparison/native_60ep/standalone_deep_model_metrics.json",
+  "shared_context_report": "results/controlled_deep_model_comparison/shared_context_60ep/standalone_deep_model_metrics.json"
+}
