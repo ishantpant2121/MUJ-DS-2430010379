@@ -25,9 +25,13 @@ def test_schema_has_explicit_typed_nodes_and_relations():
     data, schema = _example()
     report = schema.schema_report()
     assert set(report["node_types"]) == set(NODE_TYPES)
-    assert len(report["typed_relations"]) == len(RELATION_NAMES) == 6
+    assert len(report["typed_relations"]) == len(RELATION_NAMES) == 8
     assert report["node_types"]["Claim"] == 800
     assert report["node_types"]["Admission"] == 800
+    assert report["node_types"]["Provider"] > 0
+    assert np.array_equal(schema.entity_ids[0], data["provider"])
+    assert np.array_equal(schema.entity_ids[-1], data["referral_target"])
+    assert {item["relation"] for item in report["typed_relations"]} >= {"provider", "referral_target"}
     assert "index < start" in report["temporal_policy"]
 
 
