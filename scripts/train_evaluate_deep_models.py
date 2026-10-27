@@ -25,6 +25,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.utils.rnn import pack_padded_sequence
 from sklearn.metrics import (
     accuracy_score,
     average_precision_score,
@@ -60,8 +61,15 @@ class LSTMClaimClassifier(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.classifier = nn.Linear(hidden_dim, n_classes)
 
-    def forward(self, x: torch.Tensor):
-        _, (h_n, _) = self.encoder(x)
+    def forward(self, x: torch.Tensor, padding_mask: torch.Tensor | None = None):
+        if padding_mask is None:
+            _, (h_n, _) = self.encoder(x)
+        else:
+            # Context sequences are padded only at the end. Packing makes the
+            # LSTM ignore padding in the controlled shared-input comparison.
+            lengths = (~padding_mask).sum(dim=1).clamp(min=1).detach().cpu()
+            packed = pack_padded_sequence(x, lengths, batch_first=True, enforce_sorted=False)
+            _, (h_n, _) = self.encoder(packed)
         embedding = self.dropout(self.norm(h_n[-1]))
         return embedding, self.classifier(embedding)
 
@@ -86,6 +94,33 @@ class CNNClaimClassifier(nn.Module):
             x = self.dropout(F.relu(norm(conv(x))))
         pooled = torch.cat([x.mean(dim=-1), x.amax(dim=-1)], dim=-1)
         embedding = self.projection(pooled)
+        return embedding, self.classifier(embedding)
+
+
+class CNNContinuousContextClassifier(nn.Module):
+    """1D-CNN over continuous context tokens for a same-input architecture ablation."""
+    def __init__(self, input_dim: int, n_classes: int, dropout: float = 0.2):
+        super().__init__()
+        self.convs = nn.ModuleList([
+            nn.Conv1d(input_dim, 48, kernel_size=3, padding=1),
+            nn.Conv1d(48, 48, kernel_size=5, padding=2),
+        ])
+        self.norms = nn.ModuleList([nn.BatchNorm1d(48), nn.BatchNorm1d(48)])
+        self.dropout = nn.Dropout(dropout)
+        self.projection = nn.Sequential(nn.Linear(96, 48), nn.ReLU(), nn.LayerNorm(48))
+        self.classifier = nn.Linear(48, n_classes)
+
+    def forward(self, tokens: torch.Tensor, padding_mask: torch.Tensor):
+        x = tokens.transpose(1, 2)
+        mask = padding_mask.unsqueeze(1)
+        for conv, norm in zip(self.convs, self.norms):
+            x = self.dropout(F.relu(norm(conv(x))))
+            x = x.masked_fill(mask, 0.0)
+        valid = (~padding_mask).unsqueeze(1).to(dtype=x.dtype)
+        denom = valid.sum(dim=-1).clamp(min=1.0)
+        mean_pool = (x * valid).sum(dim=-1) / denom
+        max_pool = x.masked_fill(mask, torch.finfo(x.dtype).min).amax(dim=-1)
+        embedding = self.projection(torch.cat([mean_pool, max_pool], dim=-1))
         return embedding, self.classifier(embedding)
 
 
@@ -130,11 +165,23 @@ def _set_seed(seed: int) -> None:
     torch.set_num_threads(1)
 
 
-def _make_model(name: str, n_classes: int, input_dims: dict[str, int], device: torch.device) -> nn.Module:
+def _make_model(
+    name: str, n_classes: int, input_dims: dict[str, int], device: torch.device,
+    input_mode: str = "native",
+) -> nn.Module:
+    if input_mode not in {"native", "shared_context"}:
+        raise ValueError(f"Unknown input_mode: {input_mode}")
     if name == "LSTM":
-        model = LSTMClaimClassifier(input_dims["history"], n_classes)
+        model = LSTMClaimClassifier(
+            input_dims["context"] if input_mode == "shared_context" else input_dims["history"],
+            n_classes,
+        )
     elif name == "CNN1D":
-        model = CNNClaimClassifier(CODE_VOCAB, n_classes)
+        model = (
+            CNNContinuousContextClassifier(input_dims["context"], n_classes)
+            if input_mode == "shared_context"
+            else CNNClaimClassifier(CODE_VOCAB, n_classes)
+        )
     elif name == "Transformer":
         model = TransformerClaimClassifier(input_dims["context"], n_classes)
     else:
@@ -146,8 +193,29 @@ def _prepare_inputs(
     name: str,
     data: dict[str, np.ndarray],
     train_ids: np.ndarray,
+    input_mode: str = "native",
 ) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
-    """Fit any numeric scaling only on training rows; CNN consumes categorical code IDs."""
+    """Fit scaling only on training rows; shared mode uses the same context tokens."""
+    if input_mode not in {"native", "shared_context"}:
+        raise ValueError(f"Unknown input_mode: {input_mode}")
+    if input_mode == "shared_context":
+        fit_tokens = data["ctx"][train_ids]
+        fit_mask = data["ctx_pad_mask"][train_ids].astype(bool)
+        valid_tokens = fit_tokens[~fit_mask]
+        scaler = StandardScaler().fit(valid_tokens)
+        transformed = scaler.transform(data["ctx"].reshape(-1, data["ctx"].shape[-1]))
+        x = transformed.reshape(data["ctx"].shape).astype(np.float32)
+        padding_mask = data["ctx_pad_mask"].astype(bool)
+        x[padding_mask] = 0.0
+        return {"x": x, "padding_mask": padding_mask}, {
+            "input_mode": "shared_context",
+            "input_type": "standardized_relational_context_tokens_shared_by_all_architectures",
+            "scaler_fit_rows": int(len(valid_tokens)),
+            "scaler_mean": scaler.mean_.tolist(),
+            "scaler_scale": scaler.scale_.tolist(),
+            "padding_mask_used": True,
+            "padding_values_after_scaling": "zero",
+        }
     if name == "LSTM":
         scaler = StandardScaler().fit(data["hist"][train_ids].reshape(-1, data["hist"].shape[-1]))
         transformed = scaler.transform(data["hist"].reshape(-1, data["hist"].shape[-1]))
@@ -182,6 +250,7 @@ def _prepare_inputs(
 def _forward_batch(
     model: nn.Module, name: str, x: np.ndarray, ids: np.ndarray,
     device: torch.device, padding_mask: np.ndarray | None = None,
+    input_mode: str = "native",
 ) -> tuple[np.ndarray, np.ndarray]:
     model.eval()
     embeddings: list[np.ndarray] = []
@@ -190,11 +259,11 @@ def _forward_batch(
         for start in range(0, len(ids), 256):
             batch_ids = ids[start:start + 256]
             xb = torch.as_tensor(x[batch_ids], device=device)
-            if name == "CNN1D":
+            if name == "CNN1D" and input_mode == "native":
                 xb = xb.long()
             else:
                 xb = xb.float()
-            if name == "Transformer":
+            if input_mode == "shared_context" or name == "Transformer":
                 mask = torch.as_tensor(padding_mask[batch_ids], device=device, dtype=torch.bool)
                 emb, logits = model(xb, mask)
             else:
