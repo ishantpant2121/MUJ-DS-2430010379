@@ -11,8 +11,15 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import sys
 from pathlib import Path
 from typing import Any
+
+# Make repository-root modules importable when this file is invoked as
+# `python scripts/train_evaluate_deep_models.py`.
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPOSITORY_ROOT))
 
 import numpy as np
 import torch
