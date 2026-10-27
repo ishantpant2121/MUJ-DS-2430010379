@@ -245,7 +245,7 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
             "claim_index": int(idx), "timestamp_day": float(data["day"][idx]),
             "true_mechanism": str(data["label_records"][idx]["mechanism"]),
             "is_heldout_mechanism": bool(test_novel[j]),
-            "predicted_known_class": MECHANISMS[class_to_label[predicted_orig[j]] - 1]
+            "predicted_known_class": MECHANISMS[int(predicted_orig[j]) - 1]
                 if predicted_orig[j] > 0 else "benign",
             "novelty_score": float(test_novelty[j]), "conformal_p": float(test_p[j]),
             "clinical_inconsistency": float(test_clinical[j]),
