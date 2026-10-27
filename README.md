@@ -73,6 +73,22 @@ python owerf_deep_experiment.py --n-samples 4000 --epochs 12 --hidden collusion 
 
 The command trains on three known synthetic fraud mechanisms, calibrates on a separate known-class split, tests on the held-out mechanism, applies outcome/relationship/code-sequence explained-rarity checks, and compares novelty ranking with Isolation Forest. Use `--hidden all` to run the four-mechanism matrix. A single-mechanism run writes `results/deep_prototype_results.json`; the CI matrix is published to that same file on `main`. This is a proof-of-pipeline on generated data, not external validation or a complete temporal graph model.
 
+## Independent LSTM / 1D-CNN / Transformer benchmark
+
+In addition to the fused encoder above, `scripts/train_evaluate_deep_models.py` independently trains and evaluates each architecture using the same synthetic generator and held-out-mechanism protocol. LSTM reads the recent claim-history sequence, 1D-CNN reads ordered procedure-code tokens, and Transformer reads relational-context tokens. For every architecture and fold it reports known-class accuracy, macro-F1, balanced accuracy, held-out mechanism AUROC/Average Precision, FPR@95% novel recall, conformal novel recall, known false-rejection, rare-severe false-rejection, and Precision@K. It saves one checkpoint per model/fold/seed.
+
+Run the full comparison with three generator seeds:
+
+```bash
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 5 --batch-size 128 --seeds 42,43,44 --hidden all --output-dir results/standalone_deep_models
+python -m pytest tests/test_standalone_deep_models.py -v
+```
+
+Results: `results/standalone_deep_models/standalone_deep_model_metrics.json` (full reports) and `results/standalone_deep_models/standalone_deep_model_metrics.csv` (one row per model/fold/seed). Trained checkpoints are saved in `results/standalone_deep_models/weights/`. GitHub Actions runs **36 fits**: 3 architectures × 4 withheld mechanisms × 3 generator seeds. The app's **LSTM / CNN / Transformer comparison** tab reads these recorded test metrics.
+
+These are separate model baselines and a synthetic benchmark. The reported known-class accuracy excludes the held-out mechanism; the novelty AUROC/AP treat the withheld fraud mechanism as a novelty-positive class. They are not real-insurance data results, and the three architectures use different input modalities by design.
+
 ## Part 2 — OW-ERF v0.2 temporal relational pilot
 
 The new uploaded manuscript is a registered-report-style design document: it is explicitly **pre-implementation** and contains no empirical findings. The implementation is tracked separately from the manuscript so design intent is not confused with results.
