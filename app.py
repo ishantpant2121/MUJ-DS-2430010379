@@ -30,8 +30,9 @@ def read_json(path: Path, default):
 
 catalog_default = read_json(ROOT / "data/demo_policy_catalog.json", [])
 profile_default = read_json(ROOT / "data/demo_customer_profile.json", {})
-tab_policy, tab_owerf, tab_public = st.tabs([
-    "Policy recommendation", "OW-ERF open-world pilot", "Public provider benchmark"
+tab_policy, tab_owerf, tab_public, tab_deep_models = st.tabs([
+    "Policy recommendation", "OW-ERF open-world pilot", "Public provider benchmark",
+    "LSTM / CNN / Transformer comparison",
 ])
 
 with tab_policy:
@@ -193,3 +194,84 @@ with tab_public:
         st.json(public)
     else:
         st.info("Run scripts/train_public_provider_dataset.py to generate the public benchmark report.")
+
+
+with tab_deep_models:
+    st.subheader("Standalone deep-learning model comparison")
+    st.write(
+        "LSTM learns temporal claim-history patterns; 1D-CNN learns local sequence patterns in ordered procedure codes; "
+        "Transformer self-attention learns relationships among claim-context tokens. Each architecture is trained separately "
+        "on the same synthetic generator and leave-one-mechanism-out splits."
+    )
+    st.caption(
+        "Known-class accuracy and macro-F1 exclude the withheld mechanism. Novelty AUROC/AP measure whether the held-out "
+        "mechanism is ranked as unfamiliar. All results are synthetic, not real-claim validation."
+    )
+    deep_metrics_path = ROOT / "results/standalone_deep_models/standalone_deep_model_metrics.json"
+    deep_csv_path = ROOT / "results/standalone_deep_models/standalone_deep_model_metrics.csv"
+    deep_report = read_json(deep_metrics_path, {})
+    if deep_report.get("summary_by_model"):
+        summary_rows = []
+        for model_name, metrics in deep_report["summary_by_model"].items():
+            def mean_metric(key):
+                value = metrics.get(key, {}).get("mean")
+                return float(value) if value is not None else None
+            summary_rows.append({
+                "Model": model_name,
+                "Known-class accuracy": mean_metric("known_class_accuracy"),
+                "Known-class macro-F1": mean_metric("known_class_macro_f1"),
+                "Novel-mechanism AUROC": mean_metric("novel_mechanism_auroc"),
+                "Novel-mechanism average precision": mean_metric("novel_mechanism_average_precision"),
+                "Novel recall @ conformal α=.05": mean_metric("novel_recall_at_conformal_alpha_005"),
+                "Known false-rejection rate": mean_metric("known_false_rejection_rate_at_conformal_alpha_005"),
+            })
+        st.dataframe(summary_rows, use_container_width=True)
+        with st.expander("Per-mechanism, per-seed test results"):
+            st.dataframe([{
+                "model": row["model"],
+                "held-out mechanism": row["hidden_mechanism"],
+                "seed": row["data_seed"],
+                "best epoch": row["best_epoch"],
+                "known accuracy": row["known_class_accuracy"],
+                "known macro-F1": row["known_class_macro_f1"],
+                "novel AUROC": row["novel_mechanism_auroc"],
+                "novel AP": row["novel_mechanism_average_precision"],
+                "novel recall": row["novel_recall_at_conformal_alpha_005"],
+                "known false rejection": row["known_false_rejection_rate_at_conformal_alpha_005"],
+                "rare-severe false rejection": row["rare_severe_benign_false_rejection_rate"],
+            } for row in deep_report.get("runs", [])], use_container_width=True)
+        st.download_button(
+            "Download complete JSON metrics",
+            data=json.dumps(deep_report, indent=2),
+            file_name="standalone_deep_model_metrics.json",
+            mime="application/json",
+        )
+        if deep_csv_path.exists():
+            st.download_button(
+                "Download per-run CSV metrics",
+                data=deep_csv_path.read_bytes(),
+                file_name="standalone_deep_model_metrics.csv",
+                mime="text/csv",
+            )
+        st.caption(
+            f"Configured seeds: {deep_report.get('configuration', {}).get('seeds', [])}; "
+            f"models: {', '.join(deep_report.get('configuration', {}).get('models', []))}; "
+            f"held-out mechanisms: {', '.join(deep_report.get('configuration', {}).get('hidden_mechanisms', []))}."
+        )
+        with st.expander("Model definitions and preprocessing"):
+            st.write({
+                "LSTM": "10-step history sequence with six numeric channels; 2-layer LSTM classifier.",
+                "CNN1D": "14 ordered procedure-code tokens; learned token embeddings plus two Conv1D blocks.",
+                "Transformer": "Six relationship-context tokens; 2-layer Transformer encoder with a CLS token and padding mask.",
+                "Novelty": "Fused empirical-CDF energy and latent Mahalanobis score, followed by a disjoint known-only conformal calibration set.",
+                "Split": deep_report.get("split_protocol"),
+                "Limitations": deep_report.get("limitations", []),
+            })
+    else:
+        st.info("The standalone LSTM/CNN/Transformer benchmark is not in this checkout yet.")
+        st.code(
+            "python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 5 "
+            "--batch-size 128 --seeds 42,43,44 --hidden all --output-dir results/standalone_deep_models",
+            language="bash",
+        )
+        st.write("After the training workflow succeeds and commits its artifacts, this tab will show the measured metrics.")
