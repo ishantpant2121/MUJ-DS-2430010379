@@ -278,7 +278,9 @@ with tab_deep_models:
 
     st.divider()
     st.subheader("Controlled architecture ablation (same input to all three models)")
-    controlled_path = ROOT / "results/controlled_deep_model_comparison/controlled_comparison_summary.json"
+    controlled_path_60 = ROOT / "results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json"
+    controlled_path_25 = ROOT / "results/controlled_deep_model_comparison/controlled_comparison_summary.json"
+    controlled_path = controlled_path_60 if controlled_path_60.exists() else controlled_path_25
     controlled_report = read_json(controlled_path, {})
     if controlled_report.get("summary_rows"):
         controlled_rows = []
@@ -302,7 +304,7 @@ with tab_deep_models:
                 "Shared − native": row["delta_shared_minus_native"],
             })
         st.dataframe(controlled_rows, use_container_width=True)
-        st.caption(controlled_report.get("design", "Controlled synthetic comparison; see report for protocol and limitations."))
+        st.caption(f"Report: {controlled_path.name}. " + controlled_report.get("design", "Controlled synthetic comparison; see report for protocol and limitations."))
         st.download_button(
             "Download controlled-comparison report",
             data=json.dumps(controlled_report, indent=2),
