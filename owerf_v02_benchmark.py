@@ -146,21 +146,32 @@ def generate_synthetic_claim_graph(
         referral_target[i] = ring_map.get(int(provider[i]), int((provider[i] + 1) % n_providers))
     hospital = provider % n_hospitals
 
-    # Benign but clinically extreme claims: severe, well-documented and not fraud-labelled.
-    benign_outlier = (labels == 0) & (rng.random(n_samples) < benign_outlier_rate)
+    # S1: benign extreme cohorts are withheld from training/selection/calibration
+    # and are present only in deployment. The rate is measured against total N.
+    benign_outlier = np.zeros(n_samples, dtype=bool)
     benign_cohort_id = np.zeros(n_samples, dtype=np.int8)
+    deployment_ids = np.arange(deployment_start, n_samples)
+    benign_candidates = deployment_ids[labels[deployment_ids] == 0]
+    target_outlier_count = min(int(round(n_samples * benign_outlier_rate)), len(benign_candidates))
+    if target_outlier_count > 0:
+        outlier_ids = rng.choice(benign_candidates, size=target_outlier_count, replace=False)
+        benign_outlier[outlier_ids] = True
     if benign_outlier.any():
-        cohort_choices = rng.choice([1, 2, 3], int(benign_outlier.sum()), p=[0.4, 0.3, 0.3])
+        outlier_count = int(benign_outlier.sum())
+        cohort_choices = rng.choice([1, 2, 3], outlier_count, p=[0.4, 0.3, 0.3])
         benign_cohort_id[benign_outlier] = cohort_choices
-        severity[benign_outlier] = rng.uniform(0.88, 0.99, int(benign_outlier.sum()))
-        comorbidity[benign_outlier] = rng.uniform(0.65, 0.95, int(benign_outlier.sum()))
+        severity[benign_outlier] = rng.uniform(0.88, 0.99, outlier_count)
+        comorbidity[benign_outlier] = rng.uniform(0.65, 0.95, outlier_count)
         has_organ_support[benign_outlier] = 1.0
-        documented_procedures[benign_outlier] = rng.integers(4, 11, int(benign_outlier.sum()))
-        los_days[benign_outlier] = rng.integers(8, 31, int(benign_outlier.sum()))
-        documentation[benign_outlier] = rng.uniform(0.88, 1.0, int(benign_outlier.sum()))
+        documented_procedures[benign_outlier] = rng.integers(4, 11, outlier_count)
+        los_days[benign_outlier] = rng.integers(8, 31, outlier_count)
+        documentation[benign_outlier] = rng.uniform(0.88, 1.0, outlier_count)
+        capacity_utilisation[benign_outlier] = np.clip(0.45 + 0.45 * severity[benign_outlier], 0.2, 1.0)
+        billed_tier[benign_outlier] = np.digitize(severity[benign_outlier], bins=[0.3, 0.57, 0.8]).astype(float)
+        package_rate[benign_outlier] = 8000 + 14000 * severity[benign_outlier]
         # Recompute an explainable high amount after severity/LOS changes.
         claimed_amount[benign_outlier] = 6500 + 12500 * severity[benign_outlier] + 5200 * comorbidity[benign_outlier] + 700 * los_days[benign_outlier]
-        claimed_amount[benign_outlier] *= np.exp(rng.normal(0, 0.08, int(benign_outlier.sum())))
+        claimed_amount[benign_outlier] *= np.exp(rng.normal(0, 0.08, outlier_count))
 
     # Observable claim features. Hidden labels, mechanism names, ring IDs and cohort IDs are excluded.
     feature_names = [
