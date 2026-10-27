@@ -59,90 +59,58 @@
   "by_mechanism": {
     "upcoding": {
       "novel_auroc": {
-        "mean": 0.8346828005,
-        "std": 0.0694947256
+        "mean": 0.8346828009,
+        "std": 0.069536
       },
       "novel_ap": {
         "mean": 0.1618515861,
-        "std": 0.0331136302
+        "std": 0.033111
       },
       "novel_recall_at_alpha_0_05": {
-        "mean": 0.2594627595,
-        "std": 0.0645025026
-      },
-      "known_accuracy": {
-        "mean": 0.9535968114,
-        "std": 0.0163747721
-      },
-      "known_macro_f1": {
-        "mean": 0.6304693298,
-        "std": 0.0398232946
+        "mean": 0.2594620581,
+        "std": 0.064535
       }
     },
     "unbundling": {
       "novel_auroc": {
-        "mean": 0.7140394223,
-        "std": 0.1108772066
+        "mean": 0.7140393957,
+        "std": 0.110922
       },
       "novel_ap": {
         "mean": 0.0444799556,
-        "std": 0.0169910013
+        "std": 0.017013
       },
       "novel_recall_at_alpha_0_05": {
         "mean": 0.0694444444,
-        "std": 0.0636468847
-      },
-      "known_accuracy": {
-        "mean": 0.9496899406,
-        "std": 0.0084897328
-      },
-      "known_macro_f1": {
-        "mean": 0.5791818548,
-        "std": 0.0229569215
+        "std": 0.063564
       }
     },
     "phantom_billing": {
       "novel_auroc": {
-        "mean": 0.8856244063,
-        "std": 0.0523436041
+        "mean": 0.8856244061,
+        "std": 0.052344
       },
       "novel_ap": {
-        "mean": 0.3144895565,
-        "std": 0.2174335801
+        "mean": 0.3144893551,
+        "std": 0.21741
       },
       "novel_recall_at_alpha_0_05": {
         "mean": 0.3636363636,
-        "std": 0.3094917187
-      },
-      "known_accuracy": {
-        "mean": 0.9460554371,
-        "std": 0.0075408444
-      },
-      "known_macro_f1": {
-        "mean": 0.5598254905,
-        "std": 0.038487688
+        "std": 0.309521
       }
     },
     "collusion": {
       "novel_auroc": {
-        "mean": 0.4942355737,
-        "std": 0.0492713718
+        "mean": 0.494235573,
+        "std": 0.0493
       },
       "novel_ap": {
-        "mean": 0.0273545363,
-        "std": 0.0085676928
+        "mean": 0.0273546551,
+        "std": 0.008595
       },
       "novel_recall_at_alpha_0_05": {
         "mean": 0.0256410256,
-        "std": 0.0444115592
-      },
-      "known_accuracy": {
-        "mean": 0.9658236231,
-        "std": 0.0057627196
-      },
-      "known_macro_f1": {
-        "mean": 0.8109624516,
-        "std": 0.0227835413
+        "std": 0.044409
       }
     }
   },
@@ -150,7 +118,7 @@
     "Results are synthetic-only and descriptive.",
     "Collusion AUROC is near chance and needs targeted work.",
     "Gated novel recall equals raw conformal novel recall in all 12 runs; the current explained-rarity gate did not further filter rejected novel claims.",
-    "The denominator for the rare-severe-benign subset was not included in the aggregate report; rerun with explicit counts before interpreting that metric.",
+    "The denominator for the rare-severe-benign subset was not retained in the aggregate report; rerun with explicit counts before interpreting that metric.",
     "The custom encoder is not canonical PyG HGTConv/RGCNConv; Admission is one-per-claim and Diagnosis is a severity-bin proxy."
   ]
 }
