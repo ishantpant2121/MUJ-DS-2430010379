@@ -37,6 +37,14 @@ jobs:
           cp paper/main.pdf paper/OWERF_Research_Paper.pdf
           echo "Compiled PDF size: $(wc -c < paper/OWERF_Research_Paper.pdf) bytes"
 
+      - name: Upload final paper PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OWERF-Research-Paper-${{ github.sha }}
+          path: paper/OWERF_Research_Paper.pdf
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Commit compiled PDF if changed
         run: |
           git config user.name "github-actions[bot]"
