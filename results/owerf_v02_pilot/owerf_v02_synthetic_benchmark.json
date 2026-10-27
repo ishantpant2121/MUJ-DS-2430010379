@@ -1,0 +1,682 @@
+{
+  "experiment": "OW-ERF v0.2 synthetic benchmark matrix",
+  "dataset_scope": "parametric synthetic pilot only",
+  "n_samples_per_fold": 2400,
+  "epochs_per_fold": 2,
+  "fraud_rate_design_parameter": 0.08,
+  "benign_outlier_rate_design_parameter": 0.015,
+  "base_seed": 42,
+  "folds": [
+    {
+      "experiment": "OW-ERF v0.2 causal-relational synthetic pilot",
+      "manuscript_status": "pre-implementation manuscript translated to pilot code; all measurements here are new pilot outputs",
+      "dataset": "parametric synthetic claims with timestamped entity relationships; not Synthea output and not an official AB-PMJAY HBP rate transcription",
+      "sources_for_future_grounding": {
+        "Synthea": "https://github.com/synthetichealth/synthea",
+        "AB_PMJAY_HBP_2_2": "https://nha.gov.in/img/resources/HBP-2.2-manual.pdf"
+      },
+      "scope_note": "Causal relation-specific attention over past entity summaries is implemented; full arbitrary-node HGT/R-GCN via PyG and the curated official HBP package-rate table remain future work.",
+      "seed": 42,
+      "n_samples": 2400,
+      "fraud_rate_design_parameter": 0.08,
+      "benign_outlier_rate_design_parameter": 0.015,
+      "benign_outlier_claims": 36,
+      "camouflage_tier": 2,
+      "hidden_mechanisms": [
+        "upcoding"
+      ],
+      "node_types_in_schema": [
+        "Claim",
+        "Beneficiary",
+        "Hospital",
+        "Doctor",
+        "Admission",
+        "Package",
+        "Diagnosis"
+      ],
+      "relation_types_in_graph": [
+        "provider",
+        "hospital",
+        "doctor",
+        "beneficiary",
+        "package",
+        "referral_target"
+      ],
+      "n_nodes_by_type": {
+        "Claim": 2400,
+        "Beneficiary": 1080,
+        "Hospital": 67,
+        "Doctor": 192,
+        "Admission": 2400,
+        "Package": 50,
+        "Diagnosis": 50
+      },
+      "edge_count": 14400,
+      "train_claims": 1440,
+      "selection_claims": 240,
+      "calibration_claims": 240,
+      "deployment_claims": 480,
+      "label_leakage_guard": "Held-out mechanism labels are absent from train/selection/calibration windows; hidden truth is used only for evaluation metrics.",
+      "training_epochs": 2,
+      "device": "cpu",
+      "training_loss_first_epoch": 3.4542202949523926,
+      "training_loss_last_epoch": 2.8583202958106995,
+      "best_validation_cross_entropy": 0.4971385598182678,
+      "alpha": 0.05,
+      "tau_clinical": 2.300333023071289,
+      "tau_structural": 10.354028474037404,
+      "known_class_macro_f1": 0.2413984461709212,
+      "OW_ERF_novelty_metrics": {
+        "roc_auc": 0.6880748007357449,
+        "average_precision": 0.14658072387426707,
+        "threshold_at_95pct_novel_recall": 0.4225103734439834,
+        "fpr_at_95pct_novel_recall": 0.7467811158798283
+      },
+      "novel_recall_at_alpha": 0.0,
+      "novelty_rejection_recall_before_filter": 0.21428571428571427,
+      "clinical_false_alarm_rate_before_filter": 0.0,
+      "clinical_false_alarm_rate_after_filter": 0.0,
+      "known_class_realised_false_rejection": 0.04291845493562232,
+      "precision_at_k": {
+        "k": 6,
+        "value": 0.0,
+        "pool_size": 6
+      },
+      "time_to_detection_weeks": null,
+      "documentation_incompleteness_sweep": [
+        {
+          "clinical_documentation_missing_probability": 0.0,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.1,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.25,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.5,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        }
+      ],
+      "burden_fairness_proxy": {
+        "definition": "newly observed vs established hospital based on prior-claim count at event time",
+        "legitimate_escalation_rate_new_hospital": null,
+        "legitimate_escalation_rate_established_hospital": 0.013793103448275862,
+        "absolute_rate_difference": null
+      },
+      "grouping": {
+        "backend": "HDBSCAN",
+        "escalated_claims": 6,
+        "non_noise_clusters": 0,
+        "noise_fraction": 1.0,
+        "NMI": null,
+        "ARI": null,
+        "cluster_cards": [
+          {
+            "cluster_id": -1,
+            "is_noise": true,
+            "size": 6,
+            "start_day": 946.2005004882812,
+            "end_day": 1052.551025390625,
+            "unique_providers": 6,
+            "top_provider_share": 0.16666666666666666,
+            "mean_clinical_inconsistency": 0.930353581905365,
+            "mean_structural_deviation": 10.421199026897298,
+            "mean_audit_priority": 0.7748679218876059,
+            "top_deviant_observable_features": [
+              {
+                "feature": "organ_support",
+                "absolute_standardized_shift": 0.8775976300239563
+              },
+              {
+                "feature": "amount_to_package_ratio",
+                "absolute_standardized_shift": 0.7390407919883728
+              },
+              {
+                "feature": "comorbidity",
+                "absolute_standardized_shift": 0.7227572798728943
+              }
+            ]
+          }
+        ]
+      },
+      "baselines": {
+        "random_forest_one_minus_max_probability": {
+          "roc_auc": 0.7755977927651747,
+          "average_precision": 0.09269022927137004,
+          "threshold_at_95pct_novel_recall": 0.06341151387340768,
+          "fpr_at_95pct_novel_recall": 0.703862660944206
+        },
+        "isolation_forest_anomaly_score": {
+          "roc_auc": 0.7527590435315757,
+          "average_precision": 0.06083915014968363,
+          "threshold_at_95pct_novel_recall": 0.4681395590829586,
+          "fpr_at_95pct_novel_recall": 0.4613733905579399
+        }
+      },
+      "artifacts": {
+        "report": "results/owerf_v02_pilot/upcoding/owerf_v02_graph_report.json",
+        "test_predictions": "results/owerf_v02_pilot/upcoding/owerf_v02_test_predictions.json",
+        "graph_edges": "results/owerf_v02_pilot/upcoding/owerf_v02_graph_edges.json",
+        "hidden_ground_truth_for_evaluation_only": "results/owerf_v02_pilot/upcoding/owerf_v02_hidden_ground_truth.json"
+      },
+      "limitations": [
+        "Generated data and entity relationships are controlled parametric proxies; not a real claims dataset.",
+        "This first runnable graph-style pilot does not invoke Synthea or transcribe the official HBP 2.2 package/rate annex.",
+        "Relation-specific attention consumes causal summaries of past entity events; it is not a full arbitrary-node PyG HGT/R-GCN.",
+        "One seed and one camouflage tier per run; no claims of statistical significance or publication-ready evidence.",
+        "Synthetic benchmark labels are visible to the evaluator but not supplied to the model as features."
+      ]
+    },
+    {
+      "experiment": "OW-ERF v0.2 causal-relational synthetic pilot",
+      "manuscript_status": "pre-implementation manuscript translated to pilot code; all measurements here are new pilot outputs",
+      "dataset": "parametric synthetic claims with timestamped entity relationships; not Synthea output and not an official AB-PMJAY HBP rate transcription",
+      "sources_for_future_grounding": {
+        "Synthea": "https://github.com/synthetichealth/synthea",
+        "AB_PMJAY_HBP_2_2": "https://nha.gov.in/img/resources/HBP-2.2-manual.pdf"
+      },
+      "scope_note": "Causal relation-specific attention over past entity summaries is implemented; full arbitrary-node HGT/R-GCN via PyG and the curated official HBP package-rate table remain future work.",
+      "seed": 43,
+      "n_samples": 2400,
+      "fraud_rate_design_parameter": 0.08,
+      "benign_outlier_rate_design_parameter": 0.015,
+      "benign_outlier_claims": 36,
+      "camouflage_tier": 2,
+      "hidden_mechanisms": [
+        "unbundling"
+      ],
+      "node_types_in_schema": [
+        "Claim",
+        "Beneficiary",
+        "Hospital",
+        "Doctor",
+        "Admission",
+        "Package",
+        "Diagnosis"
+      ],
+      "relation_types_in_graph": [
+        "provider",
+        "hospital",
+        "doctor",
+        "beneficiary",
+        "package",
+        "referral_target"
+      ],
+      "n_nodes_by_type": {
+        "Claim": 2400,
+        "Beneficiary": 1080,
+        "Hospital": 67,
+        "Doctor": 192,
+        "Admission": 2400,
+        "Package": 50,
+        "Diagnosis": 50
+      },
+      "edge_count": 14400,
+      "train_claims": 1440,
+      "selection_claims": 240,
+      "calibration_claims": 240,
+      "deployment_claims": 480,
+      "label_leakage_guard": "Held-out mechanism labels are absent from train/selection/calibration windows; hidden truth is used only for evaluation metrics.",
+      "training_epochs": 2,
+      "device": "cpu",
+      "training_loss_first_epoch": 3.4301854769388833,
+      "training_loss_last_epoch": 2.7294288873672485,
+      "best_validation_cross_entropy": 0.5120576620101929,
+      "alpha": 0.05,
+      "tau_clinical": 1.7050070762634277,
+      "tau_structural": 9.901052006281812,
+      "known_class_macro_f1": 0.2414928649835346,
+      "OW_ERF_novelty_metrics": {
+        "roc_auc": 0.7392073602264685,
+        "average_precision": 0.04168127419684174,
+        "threshold_at_95pct_novel_recall": 0.4734439834024896,
+        "fpr_at_95pct_novel_recall": 0.5435244161358811
+      },
+      "novel_recall_at_alpha": 0.0,
+      "novelty_rejection_recall_before_filter": 0.0,
+      "clinical_false_alarm_rate_before_filter": 0.0,
+      "clinical_false_alarm_rate_after_filter": 0.0,
+      "known_class_realised_false_rejection": 0.025477707006369428,
+      "precision_at_k": {
+        "k": 1,
+        "value": 0.0,
+        "pool_size": 1
+      },
+      "time_to_detection_weeks": null,
+      "documentation_incompleteness_sweep": [
+        {
+          "clinical_documentation_missing_probability": 0.0,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.1,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.25,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.5,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        }
+      ],
+      "burden_fairness_proxy": {
+        "definition": "newly observed vs established hospital based on prior-claim count at event time",
+        "legitimate_escalation_rate_new_hospital": null,
+        "legitimate_escalation_rate_established_hospital": 0.0022727272727272726,
+        "absolute_rate_difference": null
+      },
+      "grouping": {
+        "backend": "insufficient_points",
+        "escalated_claims": 1,
+        "non_noise_clusters": 0,
+        "noise_fraction": 1.0,
+        "NMI": null,
+        "ARI": null,
+        "cluster_cards": [
+          {
+            "cluster_id": -1,
+            "is_noise": true,
+            "size": 1,
+            "start_day": 1003.7119750976562,
+            "end_day": 1003.7119750976562,
+            "unique_providers": 1,
+            "top_provider_share": 1.0,
+            "mean_clinical_inconsistency": 0.2832866609096527,
+            "mean_structural_deviation": 12.376563078736261,
+            "mean_audit_priority": 0.8091448488813663,
+            "top_deviant_observable_features": [
+              {
+                "feature": "duplicate_line_share",
+                "absolute_standardized_shift": 1.6630253791809082
+              },
+              {
+                "feature": "amount_to_package_ratio",
+                "absolute_standardized_shift": 1.3578078746795654
+              },
+              {
+                "feature": "log_package_rate",
+                "absolute_standardized_shift": 1.1519052982330322
+              }
+            ]
+          }
+        ]
+      },
+      "baselines": {
+        "random_forest_one_minus_max_probability": {
+          "roc_auc": 0.5399858457183297,
+          "average_precision": 0.024196960254566156,
+          "threshold_at_95pct_novel_recall": 0.036288630032503,
+          "fpr_at_95pct_novel_recall": 0.9002123142250531
+        },
+        "isolation_forest_anomaly_score": {
+          "roc_auc": 0.7690493040811512,
+          "average_precision": 0.04436136727207667,
+          "threshold_at_95pct_novel_recall": 0.4679729491736375,
+          "fpr_at_95pct_novel_recall": 0.46496815286624205
+        }
+      },
+      "artifacts": {
+        "report": "results/owerf_v02_pilot/unbundling/owerf_v02_graph_report.json",
+        "test_predictions": "results/owerf_v02_pilot/unbundling/owerf_v02_test_predictions.json",
+        "graph_edges": "results/owerf_v02_pilot/unbundling/owerf_v02_graph_edges.json",
+        "hidden_ground_truth_for_evaluation_only": "results/owerf_v02_pilot/unbundling/owerf_v02_hidden_ground_truth.json"
+      },
+      "limitations": [
+        "Generated data and entity relationships are controlled parametric proxies; not a real claims dataset.",
+        "This first runnable graph-style pilot does not invoke Synthea or transcribe the official HBP 2.2 package/rate annex.",
+        "Relation-specific attention consumes causal summaries of past entity events; it is not a full arbitrary-node PyG HGT/R-GCN.",
+        "One seed and one camouflage tier per run; no claims of statistical significance or publication-ready evidence.",
+        "Synthetic benchmark labels are visible to the evaluator but not supplied to the model as features."
+      ]
+    },
+    {
+      "experiment": "OW-ERF v0.2 causal-relational synthetic pilot",
+      "manuscript_status": "pre-implementation manuscript translated to pilot code; all measurements here are new pilot outputs",
+      "dataset": "parametric synthetic claims with timestamped entity relationships; not Synthea output and not an official AB-PMJAY HBP rate transcription",
+      "sources_for_future_grounding": {
+        "Synthea": "https://github.com/synthetichealth/synthea",
+        "AB_PMJAY_HBP_2_2": "https://nha.gov.in/img/resources/HBP-2.2-manual.pdf"
+      },
+      "scope_note": "Causal relation-specific attention over past entity summaries is implemented; full arbitrary-node HGT/R-GCN via PyG and the curated official HBP package-rate table remain future work.",
+      "seed": 44,
+      "n_samples": 2400,
+      "fraud_rate_design_parameter": 0.08,
+      "benign_outlier_rate_design_parameter": 0.015,
+      "benign_outlier_claims": 36,
+      "camouflage_tier": 2,
+      "hidden_mechanisms": [
+        "phantom_billing"
+      ],
+      "node_types_in_schema": [
+        "Claim",
+        "Beneficiary",
+        "Hospital",
+        "Doctor",
+        "Admission",
+        "Package",
+        "Diagnosis"
+      ],
+      "relation_types_in_graph": [
+        "provider",
+        "hospital",
+        "doctor",
+        "beneficiary",
+        "package",
+        "referral_target"
+      ],
+      "n_nodes_by_type": {
+        "Claim": 2400,
+        "Beneficiary": 1080,
+        "Hospital": 67,
+        "Doctor": 192,
+        "Admission": 2400,
+        "Package": 50,
+        "Diagnosis": 50
+      },
+      "edge_count": 14400,
+      "train_claims": 1440,
+      "selection_claims": 240,
+      "calibration_claims": 240,
+      "deployment_claims": 480,
+      "label_leakage_guard": "Held-out mechanism labels are absent from train/selection/calibration windows; hidden truth is used only for evaluation metrics.",
+      "training_epochs": 2,
+      "device": "cpu",
+      "training_loss_first_epoch": 3.3333610892295837,
+      "training_loss_last_epoch": 2.800369997819265,
+      "best_validation_cross_entropy": 0.5163791179656982,
+      "alpha": 0.05,
+      "tau_clinical": 2.0853970050811768,
+      "tau_structural": 9.972835661169093,
+      "known_class_macro_f1": 0.23944444444444443,
+      "OW_ERF_novelty_metrics": {
+        "roc_auc": 0.5964334173289397,
+        "average_precision": 0.03077527511268574,
+        "threshold_at_95pct_novel_recall": 0.4128630705394191,
+        "fpr_at_95pct_novel_recall": 0.8763326226012793
+      },
+      "novel_recall_at_alpha": 0.0,
+      "novelty_rejection_recall_before_filter": 0.0,
+      "clinical_false_alarm_rate_before_filter": 0.0,
+      "clinical_false_alarm_rate_after_filter": 0.0,
+      "known_class_realised_false_rejection": 0.08315565031982942,
+      "precision_at_k": {
+        "k": 0,
+        "value": null,
+        "pool_size": 0
+      },
+      "time_to_detection_weeks": null,
+      "documentation_incompleteness_sweep": [
+        {
+          "clinical_documentation_missing_probability": 0.0,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.1,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.25,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.5,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        }
+      ],
+      "burden_fairness_proxy": {
+        "definition": "newly observed vs established hospital based on prior-claim count at event time",
+        "legitimate_escalation_rate_new_hospital": null,
+        "legitimate_escalation_rate_established_hospital": 0.0,
+        "absolute_rate_difference": null
+      },
+      "grouping": {
+        "backend": "insufficient_points",
+        "escalated_claims": 0,
+        "non_noise_clusters": 0,
+        "noise_fraction": 1.0,
+        "NMI": null,
+        "ARI": null,
+        "cluster_cards": []
+      },
+      "baselines": {
+        "random_forest_one_minus_max_probability": {
+          "roc_auc": 0.8466757123473541,
+          "average_precision": 0.20966606716191816,
+          "threshold_at_95pct_novel_recall": 0.09153918489827878,
+          "fpr_at_95pct_novel_recall": 0.509594882729211
+        },
+        "isolation_forest_anomaly_score": {
+          "roc_auc": 0.827485946888932,
+          "average_precision": 0.07439580360903407,
+          "threshold_at_95pct_novel_recall": 0.4699885866163909,
+          "fpr_at_95pct_novel_recall": 0.42217484008528783
+        }
+      },
+      "artifacts": {
+        "report": "results/owerf_v02_pilot/phantom_billing/owerf_v02_graph_report.json",
+        "test_predictions": "results/owerf_v02_pilot/phantom_billing/owerf_v02_test_predictions.json",
+        "graph_edges": "results/owerf_v02_pilot/phantom_billing/owerf_v02_graph_edges.json",
+        "hidden_ground_truth_for_evaluation_only": "results/owerf_v02_pilot/phantom_billing/owerf_v02_hidden_ground_truth.json"
+      },
+      "limitations": [
+        "Generated data and entity relationships are controlled parametric proxies; not a real claims dataset.",
+        "This first runnable graph-style pilot does not invoke Synthea or transcribe the official HBP 2.2 package/rate annex.",
+        "Relation-specific attention consumes causal summaries of past entity events; it is not a full arbitrary-node PyG HGT/R-GCN.",
+        "One seed and one camouflage tier per run; no claims of statistical significance or publication-ready evidence.",
+        "Synthetic benchmark labels are visible to the evaluator but not supplied to the model as features."
+      ]
+    },
+    {
+      "experiment": "OW-ERF v0.2 causal-relational synthetic pilot",
+      "manuscript_status": "pre-implementation manuscript translated to pilot code; all measurements here are new pilot outputs",
+      "dataset": "parametric synthetic claims with timestamped entity relationships; not Synthea output and not an official AB-PMJAY HBP rate transcription",
+      "sources_for_future_grounding": {
+        "Synthea": "https://github.com/synthetichealth/synthea",
+        "AB_PMJAY_HBP_2_2": "https://nha.gov.in/img/resources/HBP-2.2-manual.pdf"
+      },
+      "scope_note": "Causal relation-specific attention over past entity summaries is implemented; full arbitrary-node HGT/R-GCN via PyG and the curated official HBP package-rate table remain future work.",
+      "seed": 45,
+      "n_samples": 2400,
+      "fraud_rate_design_parameter": 0.08,
+      "benign_outlier_rate_design_parameter": 0.015,
+      "benign_outlier_claims": 36,
+      "camouflage_tier": 2,
+      "hidden_mechanisms": [
+        "collusion"
+      ],
+      "node_types_in_schema": [
+        "Claim",
+        "Beneficiary",
+        "Hospital",
+        "Doctor",
+        "Admission",
+        "Package",
+        "Diagnosis"
+      ],
+      "relation_types_in_graph": [
+        "provider",
+        "hospital",
+        "doctor",
+        "beneficiary",
+        "package",
+        "referral_target"
+      ],
+      "n_nodes_by_type": {
+        "Claim": 2400,
+        "Beneficiary": 1080,
+        "Hospital": 67,
+        "Doctor": 192,
+        "Admission": 2400,
+        "Package": 50,
+        "Diagnosis": 50
+      },
+      "edge_count": 14400,
+      "train_claims": 1440,
+      "selection_claims": 240,
+      "calibration_claims": 240,
+      "deployment_claims": 480,
+      "label_leakage_guard": "Held-out mechanism labels are absent from train/selection/calibration windows; hidden truth is used only for evaluation metrics.",
+      "training_epochs": 2,
+      "device": "cpu",
+      "training_loss_first_epoch": 3.434755782286326,
+      "training_loss_last_epoch": 2.7820820013682046,
+      "best_validation_cross_entropy": 0.3713580071926117,
+      "alpha": 0.05,
+      "tau_clinical": 1.9940580129623413,
+      "tau_structural": 10.416686309821278,
+      "known_class_macro_f1": 0.2446236559139785,
+      "OW_ERF_novelty_metrics": {
+        "roc_auc": 0.37136842105263157,
+        "average_precision": 0.009818275616296612,
+        "threshold_at_95pct_novel_recall": 0.41203319502074687,
+        "fpr_at_95pct_novel_recall": 0.8021052631578948
+      },
+      "novel_recall_at_alpha": 0.0,
+      "novelty_rejection_recall_before_filter": 0.0,
+      "clinical_false_alarm_rate_before_filter": 0.0,
+      "clinical_false_alarm_rate_after_filter": 0.0,
+      "known_class_realised_false_rejection": 0.031578947368421054,
+      "precision_at_k": {
+        "k": 0,
+        "value": null,
+        "pool_size": 0
+      },
+      "time_to_detection_weeks": null,
+      "documentation_incompleteness_sweep": [
+        {
+          "clinical_documentation_missing_probability": 0.0,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.1,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.25,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        },
+        {
+          "clinical_documentation_missing_probability": 0.5,
+          "model_retrained": false,
+          "thresholds_recalibrated": false,
+          "benign_outlier_count": 36,
+          "clinical_false_alarm_rate_after_filter": 0.0,
+          "heldout_novel_recall_after_filter": 0.0
+        }
+      ],
+      "burden_fairness_proxy": {
+        "definition": "newly observed vs established hospital based on prior-claim count at event time",
+        "legitimate_escalation_rate_new_hospital": null,
+        "legitimate_escalation_rate_established_hospital": 0.0,
+        "absolute_rate_difference": null
+      },
+      "grouping": {
+        "backend": "insufficient_points",
+        "escalated_claims": 0,
+        "non_noise_clusters": 0,
+        "noise_fraction": 1.0,
+        "NMI": null,
+        "ARI": null,
+        "cluster_cards": []
+      },
+      "baselines": {
+        "random_forest_one_minus_max_probability": {
+          "roc_auc": 0.37431578947368416,
+          "average_precision": 0.01024524683711466,
+          "threshold_at_95pct_novel_recall": 0.0,
+          "fpr_at_95pct_novel_recall": 1.0
+        },
+        "isolation_forest_anomaly_score": {
+          "roc_auc": 0.3738947368421053,
+          "average_precision": 0.010298761761072962,
+          "threshold_at_95pct_novel_recall": 0.4023997862533125,
+          "fpr_at_95pct_novel_recall": 0.9705263157894737
+        }
+      },
+      "artifacts": {
+        "report": "results/owerf_v02_pilot/collusion/owerf_v02_graph_report.json",
+        "test_predictions": "results/owerf_v02_pilot/collusion/owerf_v02_test_predictions.json",
+        "graph_edges": "results/owerf_v02_pilot/collusion/owerf_v02_graph_edges.json",
+        "hidden_ground_truth_for_evaluation_only": "results/owerf_v02_pilot/collusion/owerf_v02_hidden_ground_truth.json"
+      },
+      "limitations": [
+        "Generated data and entity relationships are controlled parametric proxies; not a real claims dataset.",
+        "This first runnable graph-style pilot does not invoke Synthea or transcribe the official HBP 2.2 package/rate annex.",
+        "Relation-specific attention consumes causal summaries of past entity events; it is not a full arbitrary-node PyG HGT/R-GCN.",
+        "One seed and one camouflage tier per run; no claims of statistical significance or publication-ready evidence.",
+        "Synthetic benchmark labels are visible to the evaluator but not supplied to the model as features."
+      ]
+    }
+  ],
+  "limitations": [
+    "Single seed per fold; no significance claims.",
+    "Does not yet ingest Synthea exports or official HBP package rates.",
+    "A full PyG HGT/R-GCN and additional declared baselines/ablations remain future work."
+  ]
+}

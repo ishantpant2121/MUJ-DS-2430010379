@@ -1,0 +1,191 @@
+{
+  "system": "Insurance Intelligence — policy recommendation prototype",
+  "recommendation_type": "structured catalogue compatibility ranking",
+  "profile_summary": {
+    "age": 34,
+    "family_size": 4,
+    "annual_budget_inr": 25000,
+    "desired_sum_insured_inr": 1000000,
+    "health_needs": [
+      "diabetes"
+    ],
+    "required_benefits": [
+      "maternity",
+      "daycare",
+      "no_room_rent_cap"
+    ],
+    "city": "Jaipur"
+  },
+  "catalogue_count": 4,
+  "demo_catalogue": true,
+  "top_k": 3,
+  "recommendations": [
+    {
+      "policy_id": "DEMO-A",
+      "policy_name": "Demo Health Essential",
+      "issuer": "Illustrative insurer A",
+      "demo_only": true,
+      "eligible_by_catalogue_rules": true,
+      "eligibility_reasons": [],
+      "compatibility_score": 100.0,
+      "score_interpretation": "Transparent weighted compatibility score, not a probability, guarantee, or financial recommendation.",
+      "category_scores": {
+        "affordability": 100.0,
+        "coverage": 100.0,
+        "benefits": 100.0,
+        "waiting_period": 100.0,
+        "restrictions": 100.0,
+        "cashless_network": 100.0
+      },
+      "weights": {
+        "affordability": 20.0,
+        "coverage": 20.0,
+        "benefits": 25.0,
+        "waiting_period": 15.0,
+        "restrictions": 10.0,
+        "cashless_network": 10.0
+      },
+      "annual_premium_inr": 19800.0,
+      "budget_difference_inr": 5200.0,
+      "sum_insured_inr": 1000000.0,
+      "requested_benefits_covered": [
+        "daycare",
+        "maternity",
+        "no_room_rent_cap"
+      ],
+      "requested_benefits_unconfirmed": [],
+      "listed_waiting_period_months_by_need": {
+        "diabetes": 24
+      },
+      "room_rent_cap_pct": null,
+      "co_pay_pct": 0.0,
+      "cashless_hospitals_in_city": 72,
+      "reasons": [
+        "Illustrative annual premium ₹19,800 is within the annual budget ₹25,000.",
+        "Sum insured ₹1,000,000 meets the requested ₹1,000,000.",
+        "Includes requested benefit: daycare.",
+        "Includes requested benefit: maternity.",
+        "Includes requested benefit: no room rent cap.",
+        "Listed waiting period for diabetes: 24 months (within the profile's target).",
+        "Catalogue indicates no room-rent cap.",
+        "Catalogue lists 72 cashless hospitals for the requested city."
+      ],
+      "cautions": [],
+      "source_url": "DEMO ONLY — fictional sample record",
+      "clause_extraction": {}
+    },
+    {
+      "policy_id": "DEMO-C",
+      "policy_name": "Demo Comprehensive Max",
+      "issuer": "Illustrative insurer C",
+      "demo_only": true,
+      "eligible_by_catalogue_rules": true,
+      "eligibility_reasons": [],
+      "compatibility_score": 96.03,
+      "score_interpretation": "Transparent weighted compatibility score, not a probability, guarantee, or financial recommendation.",
+      "category_scores": {
+        "affordability": 80.13,
+        "coverage": 100.0,
+        "benefits": 100.0,
+        "waiting_period": 100.0,
+        "restrictions": 100.0,
+        "cashless_network": 100.0
+      },
+      "weights": {
+        "affordability": 20.0,
+        "coverage": 20.0,
+        "benefits": 25.0,
+        "waiting_period": 15.0,
+        "restrictions": 10.0,
+        "cashless_network": 10.0
+      },
+      "annual_premium_inr": 31200.0,
+      "budget_difference_inr": -6200.0,
+      "sum_insured_inr": 2500000.0,
+      "requested_benefits_covered": [
+        "daycare",
+        "maternity",
+        "no_room_rent_cap"
+      ],
+      "requested_benefits_unconfirmed": [],
+      "listed_waiting_period_months_by_need": {
+        "diabetes": 12
+      },
+      "room_rent_cap_pct": null,
+      "co_pay_pct": 0.0,
+      "cashless_hospitals_in_city": 145,
+      "reasons": [
+        "Sum insured ₹2,500,000 meets the requested ₹1,000,000.",
+        "Includes requested benefit: daycare.",
+        "Includes requested benefit: maternity.",
+        "Includes requested benefit: no room rent cap.",
+        "Listed waiting period for diabetes: 12 months (within the profile's target).",
+        "Catalogue indicates no room-rent cap.",
+        "Catalogue lists 145 cashless hospitals for the requested city."
+      ],
+      "cautions": [
+        "Illustrative annual premium is ₹6,200 above the stated budget."
+      ],
+      "source_url": "DEMO ONLY — fictional sample record",
+      "clause_extraction": {}
+    },
+    {
+      "policy_id": "DEMO-B",
+      "policy_name": "Demo Family Plus",
+      "issuer": "Illustrative insurer B",
+      "demo_only": true,
+      "eligible_by_catalogue_rules": true,
+      "eligibility_reasons": [],
+      "compatibility_score": 70.83,
+      "score_interpretation": "Transparent weighted compatibility score, not a probability, guarantee, or financial recommendation.",
+      "category_scores": {
+        "affordability": 100.0,
+        "coverage": 100.0,
+        "benefits": 33.33,
+        "waiting_period": 66.67,
+        "restrictions": 25.0,
+        "cashless_network": 100.0
+      },
+      "weights": {
+        "affordability": 20.0,
+        "coverage": 20.0,
+        "benefits": 25.0,
+        "waiting_period": 15.0,
+        "restrictions": 10.0,
+        "cashless_network": 10.0
+      },
+      "annual_premium_inr": 23800.0,
+      "budget_difference_inr": 1200.0,
+      "sum_insured_inr": 1500000.0,
+      "requested_benefits_covered": [
+        "daycare"
+      ],
+      "requested_benefits_unconfirmed": [
+        "maternity",
+        "no_room_rent_cap"
+      ],
+      "listed_waiting_period_months_by_need": {
+        "diabetes": 36
+      },
+      "room_rent_cap_pct": 1,
+      "co_pay_pct": 10.0,
+      "cashless_hospitals_in_city": 110,
+      "reasons": [
+        "Illustrative annual premium ₹23,800 is within the annual budget ₹25,000.",
+        "Sum insured ₹1,500,000 meets the requested ₹1,000,000.",
+        "Includes requested benefit: daycare.",
+        "Catalogue lists 110 cashless hospitals for the requested city."
+      ],
+      "cautions": [
+        "Requested benefit not confirmed in this catalogue: maternity.",
+        "Requested benefit not confirmed in this catalogue: no room rent cap.",
+        "Listed waiting period for diabetes: 36 months (longer than the target 24).",
+        "Room-rent cap of 1% is listed; room-category limits may affect admissible expenses.",
+        "Co-payment of 10.0% is listed; the member may pay part of an admissible claim."
+      ],
+      "source_url": "DEMO ONLY — fictional sample record",
+      "clause_extraction": {}
+    }
+  ],
+  "disclaimer": "Demo catalogue entries are fictional and must not be used to buy insurance. For real policies, load verified current insurer documents and validate all terms, eligibility, premiums, exclusions, waiting periods, sub-limits and network hospitals. Clause extraction is a keyword/rule baseline and is not legal advice."
+}
