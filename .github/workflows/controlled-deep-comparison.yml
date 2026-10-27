@@ -87,6 +87,10 @@ jobs:
             results/controlled_deep_model_comparison/shared_context_25ep/standalone_deep_model_metrics.csv \
             results/controlled_deep_model_comparison/controlled_comparison_summary.json \
             results/controlled_deep_model_comparison/controlled_comparison_summary.csv
+          if git diff --cached --quiet; then
+            echo "Controlled comparison metrics are unchanged."
+            exit 0
+          fi
           git commit -m "results: record controlled deep-model architecture comparison"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
