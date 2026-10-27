@@ -106,17 +106,29 @@ These are separate model baselines and a synthetic benchmark. The reported known
 
 ### Controlled architecture comparison using identical inputs
 
-The native comparison above gives each model its natural input modality, so differences can reflect both architecture and modality. A second, controlled experiment holds input representation fixed: LSTM, a continuous-input 1D-CNN, and Transformer all receive the same standardized relational-context tokens with the same padding mask. Only the architecture/sequence handling differs. Numeric scaling is fitted on training tokens only, padded positions are zeroed, validation loss selects checkpoints, and the test split remains untouched until evaluation.
+The original native benchmark gives each model its natural input modality, so its scores confound architecture and modality. The controlled ablation gives LSTM, continuous-input 1D-CNN and Transformer the **same standardized relational-context tensor** and padding mask. Scaling is fitted on valid training tokens only, padding is zeroed after scaling, validation loss selects checkpoints, calibration is disjoint/known-only, and test data stay held out.
 
-Reproduce the controlled comparison (25 epochs, 3 seeds, 4 held-out mechanisms for each mode; 72 model fits total):
+The validated **25-epoch pilot** contains 72 fits in total (3 models × 4 held-out mechanisms × 3 seeds in each of native and shared-context modes; 36 runs per mode). Mean ± SD across 12 folds/seeds per architecture:
+
+| Model | Shared-input known accuracy | Shared-input macro-F1 | Shared-input novel AUROC | Shared-input novel AP | Novel recall at α=0.05 | Known false-rejection rate |
+|---|---:|---:|---:|---:|---:|---:|
+| LSTM | 0.968 ± 0.016 | 0.865 ± 0.076 | 0.701 ± 0.209 | 0.152 ± 0.092 | 0.229 ± 0.183 | 0.047 ± 0.012 |
+| 1D-CNN | 0.970 ± 0.019 | 0.860 ± 0.096 | 0.756 ± 0.167 | 0.185 ± 0.137 | 0.297 ± 0.268 | 0.044 ± 0.011 |
+| Transformer | 0.978 ± 0.010 | 0.910 ± 0.046 | 0.806 ± 0.104 | 0.179 ± 0.134 | 0.323 ± 0.254 | 0.061 ± 0.025 |
+
+**What this says:** using the same input raised LSTM/CNN known-class performance substantially compared with native mode, supporting the conclusion that the earlier apparent gap mostly reflected input modality. The Transformer’s scores are identical in the two modes because its original input was already the shared context. Novel-mechanism recall is still low/variable and the Transformer’s known false-rejection rate is above nominal 5%. These are synthetic results, not real-claim performance, and three seeds do not establish a statistically decisive model ranking.
+
+The best shared-context checkpoints for LSTM and CNN were near the 25-epoch cap (mean best epochs 24.4 and 24.6), so the workflow is extending the controlled runs to **60 epochs** with validation-based checkpoint selection. It will publish `results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json` and commit the 60-epoch metrics and weights; the application prefers that report when available and falls back to the 25-epoch pilot.
+
+Reproduce the longer controlled comparison:
 
 ```bash
-python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 25 --batch-size 128 --seeds 42,43,44 --hidden all --input-mode native --output-dir results/controlled_deep_model_comparison/native_25ep
-python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 25 --batch-size 128 --seeds 42,43,44 --hidden all --input-mode shared_context --output-dir results/controlled_deep_model_comparison/shared_context_25ep
-python scripts/summarize_deep_comparison.py --native results/controlled_deep_model_comparison/native_25ep/standalone_deep_model_metrics.json --shared-context results/controlled_deep_model_comparison/shared_context_25ep/standalone_deep_model_metrics.json --output results/controlled_deep_model_comparison/controlled_comparison_summary.json
+python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 60 --batch-size 128 --seeds 42,43,44 --hidden all --input-mode native --output-dir results/controlled_deep_model_comparison/native_60ep
+python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 60 --batch-size 128 --seeds 42,43,44 --hidden all --input-mode shared_context --output-dir results/controlled_deep_model_comparison/shared_context_60ep
+python scripts/summarize_deep_comparison.py --native results/controlled_deep_model_comparison/native_60ep/standalone_deep_model_metrics.json --shared-context results/controlled_deep_model_comparison/shared_context_60ep/standalone_deep_model_metrics.json --output results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json
 ```
 
-The dedicated GitHub Actions workflow validates both 36-run reports, builds a mean/SD comparison, and publishes metrics plus CI checkpoint artifacts. This comparison is synthetic and controls the input tensor; it does not establish real-claim performance or a statistically conclusive ranking with only three seeds.
+The native and controlled reports are both preserved. The full temporal heterogeneous graph encoder and real-claims evaluation are separate research gaps.
 
 ### Recorded standalone deep-model results
 
