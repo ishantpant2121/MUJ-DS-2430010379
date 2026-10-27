@@ -22,12 +22,11 @@ The bundled policy catalogue and the OW-ERF v0.2 graph pilot use illustrative sy
 
 - `.github/workflows/` — automated Python tests and research-paper PDF build
 - `paper/` — LaTeX manuscript, bibliography, and compiled research-paper PDF
-- `presentations/` — project presentation
 - `docs/INSURANCE_INTELLIGENCE_PRD.md` — product vision, goals, user journeys, requirements and guardrails
 - `docs/DEEP_LEARNING_MODELS.md` — architecture, training/test protocol and metric definitions for LSTM/CNN/Transformer
 - `resources/` — screenshots of experiment/test runs
 - `results/` — canonical recorded experiment results
-- `tests/` — tests for the tabular prototype and optional deep-learning code
+- `tests/` — tests for the policy recommender, tabular/relational OW-ERF and deep-learning benchmarks
 - `policy_recommender.py` — explainable policy catalogue ranking with reasons, cautions and rule-based clause extraction
 - `data/demo_policy_catalog.json` and `data/demo_customer_profile.json` — fictional sample inputs for the recommender
 - `owerf_core.py` — earlier tabular OW-ERF prototype
@@ -41,7 +40,7 @@ The bundled policy catalogue and the OW-ERF v0.2 graph pilot use illustrative sy
 
 Project specification and model guide: [Insurance Intelligence PRD](docs/INSURANCE_INTELLIGENCE_PRD.md) · [Deep-learning architecture and evaluation guide](docs/DEEP_LEARNING_MODELS.md) · [OW-ERF v0.2 implementation map](docs/OW_ERF_V02_IMPLEMENTATION_MAP.md)
 
-Empty placeholder directories and duplicate copies of source/results files have been removed. The project does not require a separate capstone repository.
+No generic empty placeholder folders are tracked. Large reproducible intermediate feature CSVs and the stale text duplicate of the earlier tabular metrics were removed from version control; the training workflow still regenerates feature tables for local use and uploads them with CI artifacts. The project does not require a separate capstone repository.
 
 ## Part 1 — Personalized policy recommendation
 
@@ -157,7 +156,7 @@ python scripts/train_public_provider_dataset.py --seed 42
 python scripts/score_provider_features.py
 ```
 
-By default, raw CSVs are downloaded into ignored `data/external/raw/`. Outputs include `results/public_provider_fraud_report.json`, `results/public_provider_test_predictions.csv`, `results/public_provider_features.csv`, `results/public_provider_scored_features.csv`, and the fitted model at `models/public_provider_fraud_model.joblib`. The GitHub Actions workflow repeats this train/validation/test run and commits the report/model artifacts.
+By default, raw CSVs are downloaded into ignored `data/external/raw/`. Core retained artifacts are `results/public_provider_fraud_report.json`, `results/public_provider_test_predictions.csv`, and the fitted model at `models/public_provider_fraud_model.joblib`. The reproducible feature tables (`results/public_provider_features.csv` and `results/public_provider_scored_features.csv`) are generated during training/scoring and uploaded as CI artifacts, but are not committed to keep the repository small.
 
 **Latest public benchmark run (seed 42):** 5,410 providers, 506 labelled `PotentialFraud=Yes` (9.35%); 3,246 train / 1,082 validation / 1,082 held-out test providers. The model was selected by validation average precision. Logistic Regression was selected; on the held-out test set it achieved ROC-AUC **0.956**, average precision **0.754**, precision **0.629**, recall **0.723**, F1 **0.673**, and false-positive rate **4.38%** at the threshold calibrated from validation negatives. The Isolation Forest comparison achieved ROC-AUC 0.853 and average precision 0.455 at its corresponding validation-calibrated threshold.
 
