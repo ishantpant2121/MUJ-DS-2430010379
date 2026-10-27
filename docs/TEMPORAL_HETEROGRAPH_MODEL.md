@@ -33,7 +33,7 @@ The benchmark reports known-class accuracy and macro-F1 on non-held-out deployme
 - The implementation is a dependency-light R-GCN/HGT-style temporal message-passing encoder; it is not the PyTorch Geometric library's canonical HGTConv/RGCNConv implementation. This is deliberate for reproducible CPU CI. Do not call it a PyG HGT model.
 - Synthea data do not supply fraud ground truth. An ingestion/feature check cannot produce claim-level fraud AUROC without a separately labelled evaluation design.
 - The NHA HBP 2.2 manual contains package/rate tables, but no rates were automatically guessed or transcribed. Use only a manually checked, versioned catalogue with source page references.
-- There are not yet results from the full 12-run graph benchmark in this document. The smoke workflow validates executable plumbing; only completed workflow artifacts should be reported as measured results.
+- The completed 12-run benchmark is summarized in docs/TEMPORAL_GRAPH_BENCHMARK_RESULTS.md and results/temporal_heterograph_full/. The full per-fold JSON reports, test predictions and checkpoints are in GitHub Actions run https://github.com/ishantpant2121/MUJ-DS-2430010379/actions/runs/40562936336.
 - Full baseline/ablation sweeps, Synthea-derived graph checks, official catalogue curation, shortcut audits, group-wise errors, and claim-level real-data validation remain research work.
 
 ## Source references
