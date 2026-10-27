@@ -1,2 +1,3 @@
-# Optional: only for owerf_deep_encoders.py (install CPU build from pytorch.org if you have no GPU)
-torch
+# Optional CPU/GPU dependency for the deep learning experiments
+# Install a matching CUDA build instead of the CPU index URL when appropriate.
+torch>=2.1
