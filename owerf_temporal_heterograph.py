@@ -1,7 +1,7 @@
 """Temporal heterogeneous graph encoder for synthetic open-world claim research.
 
 This is a dependency-light, explicit typed-node implementation in PyTorch. It
-uses seven node types, six typed claim-to-entity relations, causal history
+uses eight node types, eight typed claim-to-entity relation channels, causal history
 messages, relation-specific R-GCN-style transforms, time encodings and
 attention-based HGT-style relation fusion. It is a research baseline, not a
 validated production fraud detector.
@@ -17,15 +17,17 @@ from torch import nn
 from torch.nn import functional as F
 
 NODE_TYPES = (
-    "Claim", "Beneficiary", "Hospital", "Doctor", "Admission", "Package", "Diagnosis"
+    "Claim", "Beneficiary", "Hospital", "Doctor", "Provider", "Admission", "Package", "Diagnosis"
 )
 RELATION_SPECS = (
-    ("beneficiary", "Beneficiary", "beneficiary"),
+    ("provider", "Provider", "provider"),
     ("hospital", "Hospital", "hospital"),
     ("doctor", "Doctor", "doctor"),
+    ("beneficiary", "Beneficiary", "beneficiary"),
     ("admission", "Admission", "admission"),
     ("package", "Package", "package"),
     ("diagnosis", "Diagnosis", "diagnosis"),
+    ("referral_target", "Provider", "referral_target"),
 )
 RELATION_NAMES = tuple(item[0] for item in RELATION_SPECS)
 
@@ -44,21 +46,28 @@ class TemporalGraphSchema:
         diagnosis = np.clip(
             np.digitize(np.asarray(data["x"])[:, 0], bins=[0.25, 0.50, 0.75]), 0, 3
         ).astype(np.int64)
+        provider_ids = np.asarray(data["provider"], dtype=np.int64)
+        referral_ids = np.asarray(data["referral_target"], dtype=np.int64)
+        provider_count = int(max(provider_ids.max(initial=0), referral_ids.max(initial=0))) + 1
         ids = (
-            np.asarray(data["beneficiary"], dtype=np.int64),
+            provider_ids,
             np.asarray(data["hospital"], dtype=np.int64),
             np.asarray(data["doctor"], dtype=np.int64),
+            np.asarray(data["beneficiary"], dtype=np.int64),
             np.arange(n, dtype=np.int64),  # one synthetic admission node per claim
             np.asarray(data["package"], dtype=np.int64),
             diagnosis,
+            referral_ids,
         )
         counts = (
-            int(data["n_nodes_by_type"]["Beneficiary"]),
+            provider_count,
             int(data["n_nodes_by_type"]["Hospital"]),
             int(data["n_nodes_by_type"]["Doctor"]),
+            int(data["n_nodes_by_type"]["Beneficiary"]),
             n,
             int(data["n_nodes_by_type"]["Package"]),
             int(diagnosis.max()) + 1,
+            provider_count,
         )
         for relation, entity_ids, count in zip(RELATION_NAMES, ids, counts):
             if entity_ids.shape != (n,) or entity_ids.min(initial=0) < 0 or entity_ids.max(initial=0) >= count:
