@@ -326,6 +326,31 @@ def _ecdf(reference: np.ndarray, values: np.ndarray) -> np.ndarray:
     return np.searchsorted(sorted_ref, values, side="right") / (len(sorted_ref) + 1.0)
 
 
+def _explained_rarity_gate(
+    rejected: np.ndarray,
+    clinical_inconsistency: np.ndarray,
+    structural_deviation: np.ndarray,
+    tau_clinical: float,
+    tau_structural: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return unexplainedness ratio and escalation decisions from calibrated thresholds."""
+    rejected = np.asarray(rejected, dtype=bool)
+    clinical = np.asarray(clinical_inconsistency, dtype=float)
+    structural = np.asarray(structural_deviation, dtype=float)
+    if rejected.ndim != 1 or clinical.ndim != 1 or structural.ndim != 1:
+        raise ValueError("Gate inputs must be one-dimensional arrays.")
+    if not (len(rejected) == len(clinical) == len(structural)):
+        raise ValueError("Gate inputs must have identical lengths.")
+    if not np.isfinite(clinical).all() or not np.isfinite(structural).all():
+        raise ValueError("Gate scores must be finite.")
+    if not np.isfinite(tau_clinical) or not np.isfinite(tau_structural):
+        raise ValueError("Gate thresholds must be finite.")
+    if tau_clinical <= 0 or tau_structural <= 0:
+        raise ValueError("Gate thresholds must be positive.")
+    unexplainedness = np.maximum(clinical / tau_clinical, structural / tau_structural)
+    return unexplainedness, rejected & (unexplainedness > 1.0)
+
+
 def _mahalanobis(reference: np.ndarray, query: np.ndarray) -> np.ndarray:
     reference = np.asarray(reference, dtype=float)
     query = np.asarray(query, dtype=float)
@@ -544,8 +569,9 @@ def run_fold(
     struct_test = _mahalanobis(benign_train_structural, structural[test_ids])
     tau_a = max(float(np.quantile(clinical_cal[cal_benign_mask], 0.95)), 1e-6)
     tau_s = max(float(np.quantile(struct_cal[cal_benign_mask], 0.95)), 1e-6)
-    unexplained = np.maximum(clinical_test/tau_a, struct_test/tau_s)
-    escalated = rejected & (unexplained > 1.0)
+    unexplained, escalated = _explained_rarity_gate(
+        rejected, clinical_test, struct_test, tau_a, tau_s
+    )
     priority = test_score * np.minimum(unexplained, 2.0)
 
     test_labels = labels[test_ids]
