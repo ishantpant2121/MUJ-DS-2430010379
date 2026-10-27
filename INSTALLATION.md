@@ -165,3 +165,16 @@ Metrics include multiclass known-class accuracy/macro-F1/balanced accuracy (calc
 
 Outputs: `results/standalone_deep_models/standalone_deep_model_metrics.json`, `results/standalone_deep_models/standalone_deep_model_metrics.csv`, and weights for all 36 fits under `results/standalone_deep_models/weights/`. The dedicated GitHub Actions workflow validates the run and commits these artifacts on `main`.
 
+
+
+## 11. Launch the interactive application
+
+Install the optional app dependency and run the UI:
+
+~~~bash
+python -m pip install -r requirements-app.txt
+streamlit run app.py
+~~~
+
+The application includes customer policy matching, the OW-ERF v0.2 pilot, the public provider-level model report, and a standalone LSTM/CNN/Transformer comparison. The last tab reads the reproducible metrics JSON/CSV once the dedicated benchmark workflow publishes them. Demo policy records remain fictional.
+
