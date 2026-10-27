@@ -183,6 +183,12 @@ def prepare(input_dir: Path, output_dir: Path) -> dict[str, object]:
     for org_id in sorted(organization_ids):
         node(nodes, "Hospital", org_id)
 
+    # Entity nodes are unique by (type, ID); repeated observations remain as timestamped edges.
+    deduplicated: dict[tuple[str, str], dict[str, object]] = {}
+    for row in nodes:
+        deduplicated.setdefault((str(row["node_type"]), str(row["node_id"])), row)
+    nodes = list(deduplicated.values())
+
     output_dir.mkdir(parents=True, exist_ok=True)
     node_count = write_csv(
         output_dir / "nodes.csv",
