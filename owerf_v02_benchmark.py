@@ -648,8 +648,11 @@ def run_fold(
         # Keep hidden truth separate from observable feature tables; generated data are not committed by CI.
         hidden_truth_path = out / "owerf_v02_hidden_ground_truth.json"
         hidden_truth_path.write_text(json.dumps(data["label_records"], indent=2, allow_nan=False) + "\n", encoding="utf-8")
+        edges_path = out / "owerf_v02_graph_edges.json"
+        edges_path.write_text(json.dumps(data["edge_records"], indent=2, allow_nan=False) + "\n", encoding="utf-8")
         report["artifacts"] = {
             "report": str(report_path), "test_predictions": str(prediction_path),
+            "graph_edges": str(edges_path),
             "hidden_ground_truth_for_evaluation_only": str(hidden_truth_path),
         }
         report_path.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
