@@ -224,7 +224,7 @@ python -m pytest -q tests/test_temporal_heterograph.py
 python scripts/train_temporal_heterograph.py --n-samples 2400 --epochs 8 --batch-size 64 --patience 3 --seeds 42,43,44 --hidden all --output-dir results/temporal_heterograph_full
 ```
 
-The model uses explicit Claim, Beneficiary, Hospital, Doctor, Admission, Package and Diagnosis nodes with relation-specific causal messages, recency features and relation attention. Since the current generator does not contain real admission records or ICD-10 diagnoses, the admission and diagnosis nodes are explicitly marked synthetic proxies. Results from the existing paper are from the earlier tabular, relation-summary and standalone deep-model experiments; do not cite the graph model as empirically validated until its full benchmark artifact has been reviewed. All current evidence remains synthetic and is not real claim-level fraud validation.
+The model uses explicit Claim, Beneficiary, Hospital, Doctor, Provider, Admission, Package and Diagnosis nodes with eight relation-specific causal channels, including a shared Provider node type for provider and referral-target links. Since the current generator does not contain real admission records or ICD-10 diagnoses, the admission and diagnosis nodes are explicitly marked synthetic proxies. Results from the existing paper are from the earlier tabular, relation-summary and standalone deep-model experiments; do not cite the graph model as empirically validated until its full benchmark artifact has been reviewed. All current evidence remains synthetic and is not real claim-level fraud validation.
 
 
 ### Data-source adapters and provenance checks
