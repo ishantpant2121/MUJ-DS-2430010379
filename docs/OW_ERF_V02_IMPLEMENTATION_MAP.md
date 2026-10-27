@@ -41,6 +41,10 @@ The three standalone encoders are implemented in `scripts/train_evaluate_deep_mo
 
 A disjoint known-only validation partition chooses the checkpoint; a separate known-only calibration partition fits the energy/Mahalanobis novelty transform and split-conformal p-values; the untouched test partition reports known-class accuracy/macro-F1 and held-out-mechanism novelty metrics. The dedicated workflow runs 3 generator seeds × 4 withheld mechanisms × 3 models = 36 fits. Result and weight paths are listed in the root README and the report records the metric semantics. Different input modalities mean this is a comparison of architecture-plus-modality pipelines, not a controlled comparison where all models consume identical tensors.
 
+## Controlled architecture ablation
+
+In addition to the native-modality 36-fit experiment, a controlled ablation runs 36 native-mode fits and 36 shared-context fits (3 seeds × 4 held-out mechanisms × 3 models per mode) at the same 25-epoch maximum. In shared-context mode, all three classifiers consume the same standardized six-token, 16-channel context array and padding mask; training-only scaling, checkpoint selection, known-only calibration and test handling remain unchanged. The 1D-CNN uses a continuous-input convolutional stem only for this ablation; the native CNN keeps its procedure-code embedding. See `results/controlled_deep_model_comparison/controlled_comparison_summary.json` after the controlled workflow publishes its measured report.
+
 ## Explicit gaps against the manuscript's full protocol
 
 The following are **not yet complete** and must not be claimed as done:
