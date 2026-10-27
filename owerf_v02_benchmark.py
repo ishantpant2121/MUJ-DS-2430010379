@@ -338,9 +338,15 @@ def _mahalanobis(reference: np.ndarray, query: np.ndarray) -> np.ndarray:
 
 
 def _metrics_for_novel(y_true: np.ndarray, score: np.ndarray) -> dict[str, Any]:
+    positives = np.asarray(score)[np.asarray(y_true) == 1]
+    negatives = np.asarray(score)[np.asarray(y_true) == 0]
+    threshold_95_tpr = float(np.quantile(positives, 0.05)) if len(positives) else None
+    fpr_95_tpr = float(np.mean(negatives >= threshold_95_tpr)) if len(negatives) and threshold_95_tpr is not None else None
     return {
         "roc_auc": float(roc_auc_score(y_true, score)) if len(np.unique(y_true)) == 2 else None,
         "average_precision": float(average_precision_score(y_true, score)) if np.any(y_true == 1) else None,
+        "threshold_at_95pct_novel_recall": threshold_95_tpr,
+        "fpr_at_95pct_novel_recall": fpr_95_tpr,
     }
 
 
@@ -549,9 +555,14 @@ def run_fold(
     class_y_test = mapped[test_ids]
     valid_known = class_y_test >= 0
     macro_f1_known = float(f1_score(class_y_test[valid_known], pred_known[valid_known], average="macro")) if valid_known.any() else None
-    k = min(100, len(test_ids))
-    topk = np.argsort(priority)[::-1][:k]
-    precision_at_k = float(hidden_mask[topk].mean()) if k else None
+    suspicious_locals = np.flatnonzero(escalated)
+    k = min(100, len(suspicious_locals))
+    if k:
+        order_pool = suspicious_locals[np.argsort(priority[suspicious_locals])[::-1][:k]]
+        precision_at_k = float(hidden_mask[order_pool].mean())
+    else:
+        order_pool = np.asarray([], dtype=int)
+        precision_at_k = None
     time_to_detection_weeks = None
     hidden_test_indices = np.flatnonzero(hidden_mask)
     alarm_hidden_indices = np.flatnonzero(escalated & hidden_mask)
@@ -573,6 +584,84 @@ def run_fold(
     else:
         nmi, ari = None, None
 
+    # Cluster cards are generated from observable features only. Hidden labels are
+    # never used to create the grouping, provider summaries, or descriptive fields.
+    cluster_cards: list[dict[str, Any]] = []
+    baseline_mean = data["x"][exo_train_benign].mean(axis=0)
+    baseline_std = data["x"][exo_train_benign].std(axis=0)
+    baseline_std = np.where(baseline_std < 1e-6, 1.0, baseline_std)
+    escalated_locals = np.flatnonzero(escalated)
+    for cluster_id in sorted(set(cluster_labels.tolist())):
+        member_local = escalated_locals[cluster_labels == cluster_id]
+        if len(member_local) == 0:
+            continue
+        member_global = test_ids[member_local]
+        member_features = data["x"][member_global]
+        standardized_shift = np.abs((member_features.mean(axis=0) - baseline_mean) / baseline_std)
+        deviant_idx = np.argsort(standardized_shift)[::-1][:3]
+        providers_in_cluster, provider_counts = np.unique(data["provider"][member_global], return_counts=True)
+        cluster_cards.append({
+            "cluster_id": int(cluster_id),
+            "is_noise": bool(cluster_id < 0),
+            "size": int(len(member_local)),
+            "start_day": float(np.min(data["day"][member_global])),
+            "end_day": float(np.max(data["day"][member_global])),
+            "unique_providers": int(len(providers_in_cluster)),
+            "top_provider_share": float(np.max(provider_counts) / len(member_global)),
+            "mean_clinical_inconsistency": float(np.mean(clinical_test[member_local])),
+            "mean_structural_deviation": float(np.mean(struct_test[member_local])),
+            "mean_audit_priority": float(np.mean(priority[member_local])),
+            "top_deviant_observable_features": [
+                {"feature": data["feature_names"][int(idx)], "absolute_standardized_shift": float(standardized_shift[idx])}
+                for idx in deviant_idx
+            ],
+        })
+
+    # Burden-fairness proxy: newly observed vs established hospitals, based solely
+    # on whether the hospital has historical claim edges before the current claim.
+    prior_hospital_count = np.expm1(data["context"][test_ids, 1, -1])
+    new_hospital_mask = prior_hospital_count <= 1.0
+    established_hospital_mask = prior_hospital_count > 1.0
+    legitimate_test_mask = test_labels == 0
+    new_fpr = float(escalated[legitimate_test_mask & new_hospital_mask].mean()) if np.any(legitimate_test_mask & new_hospital_mask) else None
+    established_fpr = float(escalated[legitimate_test_mask & established_hospital_mask].mean()) if np.any(legitimate_test_mask & established_hospital_mask) else None
+
+    # Documentation-incompleteness sweep: no retraining or threshold recalibration.
+    # Only clinical-evidence fields for hidden-metadata benign outlier claims are masked.
+    documentation_sweep: list[dict[str, Any]] = []
+    clinical_feature_columns = [0, 1, 5, 7, 8, 10, 11, 12]
+    benign_local = np.flatnonzero(data["benign_outlier"][test_ids])
+    for gamma in (0.0, 0.1, 0.25, 0.5):
+        gamma_x = x_scaled[test_ids].copy()
+        gamma_exo = exo_scaled[test_ids].copy()
+        if gamma > 0 and len(benign_local):
+            gamma_rng = np.random.default_rng(seed + int(gamma * 10000))
+            xmask = gamma_rng.random((len(benign_local), len(clinical_feature_columns))) < gamma
+            for col_position, column_index in enumerate(clinical_feature_columns):
+                selected_rows = benign_local[xmask[:, col_position]]
+                gamma_x[selected_rows, column_index] = 0.0
+            exo_mask = gamma_rng.random((len(benign_local), gamma_exo.shape[1])) < gamma
+            for col_position in range(gamma_exo.shape[1]):
+                selected_rows = benign_local[exo_mask[:, col_position]]
+                gamma_exo[selected_rows, col_position] = 0.0
+        gamma_out = _forward(model, gamma_x, data["context"][test_ids], gamma_exo, device)
+        gamma_energy = -np.logaddexp.reduce(gamma_out["logits"], axis=1)
+        gamma_md = class_mahalanobis(gamma_out["embedding"])
+        gamma_score = 0.5 * _ecdf(val_energy, gamma_energy) + 0.5 * _ecdf(val_md, gamma_md)
+        gamma_p = (1.0 + (cal_score[:, None] >= gamma_score[None, :]).sum(axis=0)) / (len(cal_score) + 1.0)
+        gamma_sigma = np.exp(np.clip(gamma_out["log_sigma"], -3, 2))
+        gamma_clinical = np.maximum((target_norm[test_ids] - gamma_out["mu"]) / gamma_sigma, 0).max(axis=1)
+        gamma_unexplained = np.maximum(gamma_clinical / tau_a, struct_test / tau_s)
+        gamma_escalated = (gamma_p <= alpha) & (gamma_unexplained > 1.0)
+        documentation_sweep.append({
+            "clinical_documentation_missing_probability": gamma,
+            "model_retrained": False,
+            "thresholds_recalibrated": False,
+            "benign_outlier_count": int(len(benign_local)),
+            "clinical_false_alarm_rate_after_filter": float(gamma_escalated[benign_local].mean()) if len(benign_local) else None,
+            "heldout_novel_recall_after_filter": float(gamma_escalated[hidden_mask].mean()) if hidden_mask.any() else None,
+        })
+
     # Baselines: RF classifies only known classes; IF is fitted only on legitimate training claims.
     rf = RandomForestClassifier(n_estimators=200, min_samples_leaf=3, class_weight="balanced_subsample", random_state=seed, n_jobs=1)
     rf.fit(x_scaled[train_ids], train_y_known)
@@ -591,8 +680,6 @@ def run_fold(
         test_predictions.append({
             "claim_id": f"CLM{global_i:07d}",
             "timestamp_day": float(data["day"][global_i]),
-            "true_mechanism_for_evaluation_only": str(label_name[local_i]),
-            "benign_cohort_id_for_evaluation_only": int(data["benign_cohort_id"][global_i]),
             "novelty_score": float(test_score[local_i]),
             "conformal_p_value": float(p_values[local_i]),
             "rejected_at_alpha": bool(rejected[local_i]),
@@ -612,6 +699,8 @@ def run_fold(
         "sources_for_future_grounding": {"Synthea": SYNTHEA_SOURCE, "AB_PMJAY_HBP_2_2": HBP_SOURCE},
         "scope_note": "Causal relation-specific attention over past entity summaries is implemented; full arbitrary-node HGT/R-GCN via PyG and the curated official HBP package-rate table remain future work.",
         "seed": seed, "n_samples": n_samples, "fraud_rate_design_parameter": fraud_rate,
+        "benign_outlier_rate_design_parameter": benign_outlier_rate,
+        "benign_outlier_claims": int(data["benign_outlier"].sum()),
         "camouflage_tier": tier, "hidden_mechanisms": list(hidden),
         "node_types_in_schema": list(NODE_TYPES), "relation_types_in_graph": list(RELATIONS),
         "n_nodes_by_type": data["n_nodes_by_type"], "edge_count": len(data["edge_records"]),
@@ -628,13 +717,20 @@ def run_fold(
         "clinical_false_alarm_rate_before_filter": float(rejected[benign_clinical_mask].mean()) if benign_clinical_mask.any() else None,
         "clinical_false_alarm_rate_after_filter": float(escalated[benign_clinical_mask].mean()) if benign_clinical_mask.any() else None,
         "known_class_realised_false_rejection": float(rejected[known_test_mask].mean()) if known_test_mask.any() else None,
-        "precision_at_k": {"k": k, "value": precision_at_k},
+        "precision_at_k": {"k": k, "value": precision_at_k, "pool_size": int(escalated.sum())},
         "time_to_detection_weeks": time_to_detection_weeks,
+        "documentation_incompleteness_sweep": documentation_sweep,
+        "burden_fairness_proxy": {
+            "definition": "newly observed vs established hospital based on prior-claim count at event time",
+            "legitimate_escalation_rate_new_hospital": new_fpr,
+            "legitimate_escalation_rate_established_hospital": established_fpr,
+            "absolute_rate_difference": abs(new_fpr - established_fpr) if new_fpr is not None and established_fpr is not None else None,
+        },
         "grouping": {
             "backend": cluster_backend, "escalated_claims": int(escalated.sum()),
             "non_noise_clusters": int(len(set(cluster_labels.tolist()) - {-1})),
             "noise_fraction": float(np.mean(cluster_labels < 0)) if len(cluster_labels) else 1.0,
-            "NMI": nmi, "ARI": ari,
+            "NMI": nmi, "ARI": ari, "cluster_cards": cluster_cards,
         },
         "baselines": {
             "random_forest_one_minus_max_probability": _metrics_for_novel(hidden_mask.astype(int), rf_novelty),
