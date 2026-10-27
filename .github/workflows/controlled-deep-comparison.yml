@@ -37,6 +37,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Compile changed application and research modules
+        run: |
+          python -m py_compile app.py owerf_v02_benchmark.py
+          python -m py_compile scripts/train_evaluate_deep_models.py scripts/summarize_deep_comparison.py
+          python -m py_compile tests/test_standalone_deep_models.py tests/test_owerf_v02_benchmark.py
       - name: Test model architectures, shared-input preprocessing, and decision gate
         run: python -m pytest tests/test_standalone_deep_models.py tests/test_owerf_v02_benchmark.py -v
       - name: Train native-modality models on paired folds and seeds
