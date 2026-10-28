@@ -2,7 +2,7 @@
 
 ## What is implemented
 
-The new owerf_temporal_heterograph.py module adds an explicit typed-node temporal graph encoder using core PyTorch rather than requiring a compiled PyTorch-Geometric extension. The types are Claim, Beneficiary, Hospital, Doctor, Provider, Admission, Package and Diagnosis. Eight typed relation channels connect claims to these entity types, including separate provider and referral-target channels that share the Provider node namespace. The encoder uses relation-specific claim-to-entity projections, time features and recency weighting for historical messages, learned node-type embeddings, log-history-degree features, relation-specific entity-to-query transforms, attention over relation messages, and an open-set classifier plus heteroscedastic clinical-expectation head.
+The new owerf_temporal_heterograph.py module adds an explicit typed-node temporal graph encoder using core PyTorch rather than requiring a compiled PyTorch-Geometric extension. The types are Claim, Beneficiary, Hospital, Doctor, Admission, Package and Diagnosis. Six typed relation channels connect claims to Beneficiary, Hospital, Doctor, Admission, Package and Diagnosis nodes. Provider and referral-target history channels belong to the separate relation-summary pilot, not this typed-node encoder. The encoder uses relation-specific claim-to-entity projections, time features and recency weighting for historical messages, learned node-type embeddings, log-history-degree features, relation-specific entity-to-query transforms, attention over relation messages, and an open-set classifier plus heteroscedastic clinical-expectation head.
 
 The generated schema supplies provider, referral-target, hospital, doctor, beneficiary, package and timestamp identifiers. Admission is represented by one synthetic admission node per claim and Diagnosis is a severity-bin proxy. These are explicit proxies, not true clinical admissions or ICD-10 diagnoses. Hidden labels, mechanism IDs and ring IDs are never graph features.
 
@@ -20,7 +20,7 @@ python -m pytest -q tests/test_temporal_heterograph.py
 python scripts/train_temporal_heterograph.py --n-samples 2400 --epochs 8 --batch-size 64 --patience 3 --seeds 42,43,44 --hidden all --output-dir results/temporal_heterograph_full
 ~~~
 
-The full command performs 4 held-out-mechanism folds × 3 generator seeds = 12 synthetic runs. It writes per-fold report.json, test_predictions.json, and model_state.pt, plus aggregate JSON/CSV. The Temporal heterogeneous graph benchmark GitHub Actions workflow has a small one-fold smoke run and a manually selectable full run.
+The full command performs 4 held-out-mechanism folds × 3 generator seeds = 12 synthetic runs. It writes per-fold report.json, test_predictions.json, and model_state.pt, plus aggregate JSON/CSV. The Temporal heterogeneous graph benchmark GitHub Actions workflow has a small one-fold smoke run and a manually selectable full run. A matched no-graph control is also available with --ablation no_graph.
 
 ## Model metrics
 
@@ -41,3 +41,8 @@ The benchmark reports known-class accuracy and macro-F1 on non-held-out deployme
 - Synthea project and export formats: https://github.com/synthetichealth/synthea
 - Synthea CSV data dictionary: https://github.com/synthetichealth/synthea/wiki/CSV-File-Data-Dictionary
 - National Health Authority HBP 2.2 manual: https://nha.gov.in/img/resources/HBP-2.2-manual.pdf
+
+
+## Matched no-graph control
+
+The matched 12-run comparison completed on the same simulated mechanisms and seeds. Full-graph mean novelty AUROC was 0.6965 ± 0.1662 versus 0.7062 ± 0.1895 for the no-graph control; novelty recall at nominal alpha 0.05 was 0.1077 ± 0.1263 versus 0.1272 ± 0.1273. The no-graph control also slightly exceeded the graph model on mean known accuracy, macro-F1 and AP. Thus the experiment does not show benefit from graph message passing for the current generator. Collusion AUROC is below chance in the full graph arm (0.4553 ± 0.0404). See docs/TEMPORAL_GRAPH_BENCHMARK_RESULTS.md for per-mechanism results and artifact links.
