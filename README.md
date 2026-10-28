@@ -128,7 +128,7 @@ python scripts/train_evaluate_deep_models.py --n-samples 2400 --epochs 60 --batc
 python scripts/summarize_deep_comparison.py --native results/controlled_deep_model_comparison/native_60ep/standalone_deep_model_metrics.json --shared-context results/controlled_deep_model_comparison/shared_context_60ep/standalone_deep_model_metrics.json --output results/controlled_deep_model_comparison/controlled_comparison_summary_60ep.json
 ~~~
 
-The original 5-epoch native baseline and 25-epoch controlled pilot remain separate, traceable reports. The full temporal heterogeneous graph encoder and real-claims evaluation are still separate research gaps.
+The original 5-epoch native baseline and 25-epoch controlled pilot remain separate, traceable reports. A custom typed-node temporal heterograph baseline has since been implemented and evaluated across 12 synthetic folds; real claim-level validation, broader baselines and ablations remain research gaps.
 
 ### Recorded standalone deep-model results
 
@@ -209,7 +209,7 @@ Bibliography entries retain the names of researchers whose publications are cite
 
 ## Temporal heterogeneous graph research implementation
 
-The research branch adds an explicit typed-node temporal graph encoder and an end-to-end synthetic benchmark:
+The main branch includes an explicit typed-node temporal graph encoder and an end-to-end synthetic benchmark:
 - Encoder: `owerf_temporal_heterograph.py`
 - Training/evaluation: `scripts/train_temporal_heterograph.py`
 - Tests: `tests/test_temporal_heterograph.py`
