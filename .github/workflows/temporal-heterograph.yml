@@ -86,3 +86,32 @@ jobs:
           path: results/temporal_heterograph_full/
           if-no-files-found: error
           retention-days: 90
+
+
+  relation-free-ablation:
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.full_benchmark == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-deep.txt
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt && python -m pip install torch --index-url https://download.pytorch.org/whl/cpu && python -m pip install -r requirements-deep.txt
+      - name: Run matched relation-free control (same folds and generator seeds)
+        run: >-
+          python scripts/train_temporal_heterograph.py
+          --n-samples 2400 --epochs 8 --batch-size 64 --patience 3
+          --seeds 42,43,44 --hidden all --ablation no_graph
+          --output-dir results/temporal_heterograph_no_graph
+      - uses: actions/upload-artifact@v4
+        with:
+          name: relation-free-ablation-${{ github.run_id }}
+          path: results/temporal_heterograph_no_graph/
+          if-no-files-found: error
+          retention-days: 90
