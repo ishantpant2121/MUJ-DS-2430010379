@@ -80,7 +80,8 @@ def tensorize(data: dict[str, Any], schema: TemporalGraphSchema, train_end: int,
 
 
 def run_range(model: TemporalHeteroGraphEncoder, arrays: dict[str, Any],
-              start: int, end: int, batch_size: int) -> dict[str, np.ndarray]:
+              start: int, end: int, batch_size: int,
+              use_graph_context: bool = True) -> dict[str, np.ndarray]:
     """Evaluate a chronological range with strictly past-only graph snapshots."""
     model.eval()
     out: dict[str, list[np.ndarray]] = {
@@ -92,7 +93,8 @@ def run_range(model: TemporalHeteroGraphEncoder, arrays: dict[str, Any],
             targets = torch.arange(left, right, device=arrays["x"].device)
             emb, logits, mu, log_sigma = model(
                 arrays["x"], arrays["exo"], arrays["entity_ids"], arrays["node_counts"],
-                arrays["days"], history, targets
+                arrays["days"], history, targets,
+                use_graph_context=use_graph_context
             )
             for key, value in (("embedding", emb), ("logits", logits), ("mu", mu),
                                ("log_sigma", log_sigma)):
@@ -101,7 +103,8 @@ def run_range(model: TemporalHeteroGraphEncoder, arrays: dict[str, Any],
 
 
 def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
-               batch_size: int, patience: int, output_dir: Path, device: torch.device) -> dict[str, Any]:
+               batch_size: int, patience: int, output_dir: Path, device: torch.device,
+               ablation: str = "full") -> dict[str, Any]:
     data = generate_synthetic_claim_graph(
         n_samples=n_samples, seed=seed, hidden_mechanisms=(hidden_mechanism,), tier=2
     )
@@ -126,6 +129,12 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
     if len(benign_train_idx) == 0:
         raise ValueError("No benign training claims")
 
+    # Same generator seed initializes the same model parameters in each paired arm.
+    # The graph-free arm retains parameter shapes and all downstream decision stages.
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    use_graph_context = (ablation != "no_graph")
     model = TemporalHeteroGraphEncoder(
         n_features=arrays["x"].shape[1], n_classes=len(known_labels), hidden_dim=48,
         exo_dim=arrays["exo"].shape[1], n_targets=targets.shape[1]
@@ -145,7 +154,8 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
             q = torch.arange(left, right, device=device)
             emb, logits, mu, log_sigma = model(
                 arrays["x"], arrays["exo"], arrays["entity_ids"], arrays["node_counts"],
-                arrays["days"], h, q
+                arrays["days"], h, q,
+                use_graph_context=use_graph_context
             )
             yy = y_tensor[q]
             classification = F.cross_entropy(logits, yy)
@@ -161,7 +171,7 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
             optimizer.step()
             train_loss_values.append(float(loss.detach().cpu()))
 
-        val_parts = run_range(model, arrays, train_end, selection_end, batch_size)
+        val_parts = run_range(model, arrays, train_end, selection_end, batch_size, use_graph_context)
         val_labels = y_mapped[train_end:selection_end]
         val_loss = float(F.cross_entropy(
             torch.as_tensor(val_parts["logits"], dtype=torch.float32),
@@ -181,9 +191,9 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
 
     # All representations are recalculated with the selected checkpoint and a
     # causal graph snapshot for each target block.
-    train_out = run_range(model, arrays, 0, train_end, batch_size)
-    cal_out = run_range(model, arrays, selection_end, calibration_end, batch_size)
-    test_out = run_range(model, arrays, calibration_end, n_samples, batch_size)
+    train_out = run_range(model, arrays, 0, train_end, batch_size, use_graph_context)
+    cal_out = run_range(model, arrays, selection_end, calibration_end, batch_size, use_graph_context)
+    test_out = run_range(model, arrays, calibration_end, n_samples, batch_size, use_graph_context)
     train_energy = -np.logaddexp.reduce(train_out["logits"], axis=1)
     cal_energy = -np.logaddexp.reduce(cal_out["logits"], axis=1)
     test_energy = -np.logaddexp.reduce(test_out["logits"], axis=1)
@@ -224,6 +234,9 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
     predicted_orig = class_to_label[np.argmax(logits, axis=1)]
     known_y = test_labels[test_known]
     known_pred = predicted_orig[test_known]
+    rare_severe_benign_mask = (test_labels == 0) & data["benign_outlier"][calibration_end:n_samples]
+    rare_severe_count = int(rare_severe_benign_mask.sum())
+    rare_severe_false_rejected = int(test_rejected[rare_severe_benign_mask].sum())
     metrics: dict[str, Any] = {
         "known_accuracy": float(accuracy_score(known_y, known_pred)) if len(known_y) else None,
         "known_macro_f1": float(f1_score(known_y, known_pred, labels=known_labels,
@@ -235,9 +248,10 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
         "novel_recall_at_alpha": float(test_rejected[test_novel].mean()) if test_novel.any() else None,
         "known_false_rejection_at_alpha": float(test_rejected[test_known].mean()) if test_known.any() else None,
         "rare_severe_benign_false_rejection": (
-            float(test_rejected[(test_labels == 0) & data["benign_outlier"][calibration_end:n_samples]].mean())
-            if np.any((test_labels == 0) & data["benign_outlier"][calibration_end:n_samples]) else None
+            float(rare_severe_false_rejected / rare_severe_count) if rare_severe_count else None
         ),
+        "rare_severe_benign_count": rare_severe_count,
+        "rare_severe_benign_false_rejected_count": rare_severe_false_rejected,
         "gated_novel_recall": float(escalated[test_novel].mean()) if test_novel.any() else None,
         "escalation_rate": float(escalated.mean()),
         "calibration_known_false_rejection": float((cal_p <= alpha).mean()),
@@ -248,6 +262,7 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
     for j, idx in enumerate(range(calibration_end, n_samples)):
         preds.append({
             "claim_index": int(idx), "timestamp_day": float(data["day"][idx]),
+            "ablation": ablation,
             "true_mechanism": str(data["label_records"][idx]["mechanism"]),
             "is_heldout_mechanism": bool(test_novel[j]),
             "predicted_known_class": MECHANISMS[int(predicted_orig[j]) - 1]
@@ -262,6 +277,7 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
         "experiment": "OW-ERF temporal heterogeneous graph synthetic benchmark",
         "status": "synthetic research baseline; not validated on real claims",
         "seed": int(seed), "hidden_mechanism": hidden_mechanism, "tier": 2,
+        "ablation": ablation, "graph_context_enabled": bool(use_graph_context),
         "n_samples": int(n_samples), "epochs_requested": int(epochs),
         "best_epoch": int(best_epoch), "selection_loss": float(best_val),
         "train_claims": train_end, "selection_claims": selection_end - train_end,
@@ -295,6 +311,10 @@ def main() -> None:
     parser.add_argument("--patience", type=int, default=3)
     parser.add_argument("--seeds", default="42,43,44")
     parser.add_argument("--hidden", default="all", help="One mechanism name or 'all'")
+    parser.add_argument(
+        "--ablation", choices=("full", "no_graph"), default="full",
+        help="full uses causal entity messages; no_graph zeros all entity messages while retaining the model and decision pipeline"
+    )
     parser.add_argument("--output-dir", default="results/temporal_heterograph")
     parser.add_argument("--device", default="auto", choices=("auto", "cpu", "cuda"))
     args = parser.parse_args()
@@ -317,15 +337,22 @@ def main() -> None:
             reports.append(train_fold(
                 n_samples=args.n_samples, hidden_mechanism=hidden, seed=seed,
                 epochs=args.epochs, batch_size=args.batch_size, patience=args.patience,
-                output_dir=output_dir, device=device
+                output_dir=output_dir, device=device, ablation=args.ablation
             ))
     summary = {
         "title": "Temporal heterogeneous graph OW-ERF synthetic benchmark",
-        "model": "typed temporal relation-specific message passing + relation attention + calibrated explained-rarity gate",
+        "model": (
+            "typed temporal relation-specific message passing + relation attention + calibrated explained-rarity gate"
+            if args.ablation == "full" else
+            "relation-free claim-only control: entity messages disabled; same parameter shapes and calibration/gating pipeline"
+        ),
+        "ablation": args.ablation,
         "protocol": {
             "folds": len(reports), "seeds": seeds, "hidden_mechanisms": hidden_mechanisms,
             "n_samples_per_fold": args.n_samples, "epoch_cap": args.epochs,
             "batch_size": args.batch_size, "device": str(device),
+            "ablation": args.ablation,
+            "same_seed_initialization": True,
             "data": "parametric synthetic claims only; not real claim data",
         },
         "aggregate_metrics": {},

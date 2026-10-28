@@ -92,3 +92,33 @@ def test_temporal_leakage_guard_rejects_history_containing_query():
     with pytest.raises(ValueError, match="Temporal leakage"):
         model(x, exo, entity_ids, schema.node_counts, days,
               torch.arange(0, 121), torch.arange(120, 128))
+
+
+def test_relation_free_ablation_ignores_entity_messages_and_keeps_model_shape():
+    data, schema = _example(seed=23)
+    torch.manual_seed(29)
+    model = TemporalHeteroGraphEncoder(n_features=data["x"].shape[1], n_classes=4)
+    model.eval()
+    x = torch.as_tensor(data["x"], dtype=torch.float32)
+    exo = torch.as_tensor(data["exo"], dtype=torch.float32)
+    days = torch.as_tensor(schema.days, dtype=torch.float32)
+    entity_ids = tuple(torch.as_tensor(item, dtype=torch.long) for item in schema.entity_ids)
+    history = torch.arange(0, 120)
+    targets = torch.arange(120, 128)
+    parameter_count = sum(p.numel() for p in model.parameters())
+
+    with torch.no_grad():
+        baseline = model(
+            x, exo, entity_ids, schema.node_counts, days, history, targets,
+            use_graph_context=False
+        )
+        # A graph-free model must not depend on entity IDs or historical timestamps.
+        changed_entities = tuple(torch.zeros_like(ids) for ids in entity_ids)
+        changed_days = days.flip(0) + 10000.0
+        altered = model(
+            x, exo, changed_entities, schema.node_counts, changed_days, history, targets,
+            use_graph_context=False
+        )
+    assert parameter_count == sum(p.numel() for p in model.parameters())
+    for actual, expected in zip(altered, baseline):
+        assert torch.allclose(actual, expected, atol=1e-6)
