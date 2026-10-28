@@ -232,3 +232,12 @@ The model uses explicit Claim, Beneficiary, Hospital, Doctor, Provider, Admissio
 - Synthea CSV graph adapter: `python scripts/prepare_synthea_graph.py --input-dir path/to/output/csv --output-dir data/prepared_synthea_graph`. It writes typed nodes, timestamped edges and a hash manifest. Synthea is synthetic health data and does not supply fraud labels; this adapter does not report fraud-classification performance.
 - HBP package-rate review: copy `data/hbp_package_catalog_template.csv` to a separately reviewed catalogue, transcribe source-verified rows only, then run `python scripts/validate_hbp_catalog.py --input data/hbp_package_catalog.csv --output results/hbp_catalog_validation.json`. The checker validates row structure and provenance fields, not the truth of rates; every rate must be checked against the official source page by a human reviewer.
 - Data ingestion checks: `python -m pytest -q tests/test_data_ingestion.py`.
+
+
+## Latest research status (October 2026)
+
+- The custom temporal graph benchmark and matched relation-free control have both completed 12 synthetic runs (four held-out mechanisms × three generator seeds). The measured control is slightly better on average novel AUROC/AP/recall, so the current experiment does **not** demonstrate a benefit from graph message passing. Collusion results are near/below chance and novelty recall is low. See [paired benchmark results](docs/TEMPORAL_GRAPH_BENCHMARK_RESULTS.md).
+- Full graph + relation-free CI artifacts and job logs: [workflow run](https://github.com/ishantpant2121/MUJ-DS-2430010379/actions/runs/40680366943).
+- The paper source contains the updated matched result table; the PDF must rebuild successfully for the latest paper commit before release.
+- Repository audit: no zero-byte tracked files or .gitkeep placeholders were found. Git does not track empty directories, so there are no tracked empty directories to remove.
+- Final external-submission blockers remain: reference-by-reference citation verification, course submission instructions/disclosure checks, instructor invitation if still pending, and editable PPTX upload only if required. The results are synthetic-only and are not real claim-level validation.
