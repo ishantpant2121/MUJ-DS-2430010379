@@ -1,0 +1,41 @@
+{
+  "experiment": "Matched temporal heterograph vs relation-free control",
+  "source_workflow_run": 40680366943,
+  "workflow_url": "https://github.com/ishantpant2121/MUJ-DS-2430010379/actions/runs/40680366943",
+  "protocol": {
+    "runs_per_arm": 12,
+    "generator_seeds": [42, 43, 44],
+    "held_out_mechanisms": ["upcoding", "unbundling", "phantom_billing", "collusion"],
+    "claims_per_run": 2400,
+    "epoch_cap": 8,
+    "device": "cpu",
+    "data": "parametric synthetic claims only"
+  },
+  "full_graph": {
+    "known_accuracy": {"mean": 0.9566408857, "std": 0.0111030199},
+    "known_macro_f1": {"mean": 0.6516288968, "std": 0.0945716112},
+    "novel_auroc": {"mean": 0.6964899932, "std": 0.1661790931},
+    "novel_ap": {"mean": 0.0898554916, "std": 0.0687205975},
+    "novel_recall_at_alpha_0_05": {"mean": 0.1076687202, "std": 0.1263362670},
+    "known_false_rejection_at_alpha_0_05": {"mean": 0.0391200453, "std": 0.0131565403},
+    "gated_novel_recall": {"mean": 0.1076687202, "std": 0.1263362670},
+    "escalation_rate": {"mean": 0.0401041667, "std": 0.0130596014}
+  },
+  "no_graph_control": {
+    "known_accuracy": {"mean": 0.9589507940, "std": 0.0114167795},
+    "known_macro_f1": {"mean": 0.6655222026, "std": 0.0998048265},
+    "novel_auroc": {"mean": 0.7062029059, "std": 0.1895060839},
+    "novel_ap": {"mean": 0.0980282745, "std": 0.0740978893},
+    "novel_recall_at_alpha_0_05": {"mean": 0.1271762959, "std": 0.1273392223},
+    "known_false_rejection_at_alpha_0_05": {"mean": 0.0380422321, "std": 0.0118226931},
+    "gated_novel_recall": {"mean": 0.1212239150, "std": 0.1245357638},
+    "escalation_rate": {"mean": 0.0395833333, "std": 0.0115141547}
+  },
+  "interpretation": [
+    "The no-graph control is slightly ahead on mean known-class accuracy, macro-F1, novel AUROC, AP and raw novel recall.",
+    "The current synthetic experiment does not demonstrate a benefit from relational message passing.",
+    "Collusion AUROC is below chance in the full-graph arm; unbundling recall is zero in the full-graph arm across the three seeds.",
+    "All results are synthetic-only and do not validate performance on real insurance claims.",
+    "The full-graph custom model has eight node types and eight relation channels; Admission is a one-per-claim proxy and Diagnosis is a severity-bin proxy."
+  ]
+}
