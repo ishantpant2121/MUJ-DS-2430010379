@@ -155,6 +155,7 @@ class TemporalHeteroGraphEncoder(nn.Module):
         days: torch.Tensor,
         history_indices: torch.Tensor,
         target_indices: torch.Tensor,
+        use_graph_context: bool = True,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         if len(entity_ids) != len(RELATION_SPECS):
             raise ValueError("entity_ids must contain an index vector for each typed relation")
@@ -165,44 +166,48 @@ class TemporalHeteroGraphEncoder(nn.Module):
 
         claim_h = self.claim_in(x_all)
         query_h = claim_h[target_indices]
-        history_h = claim_h[history_indices]
-        query_day = days[target_indices].min()
-        time_span = torch.clamp(days.max() - days.min(), min=1.0)
+        if use_graph_context:
+            history_h = claim_h[history_indices]
+            query_day = days[target_indices].min()
+            time_span = torch.clamp(days.max() - days.min(), min=1.0)
+            relation_messages = []
+            for r, (relation, node_type, _) in enumerate(RELATION_SPECS):
+                count = int(node_counts[r])
+                all_ids = entity_ids[r]
+                hist_ids = all_ids[history_indices]
+                # Only past claim events contribute messages to entity nodes.
+                degree = torch.zeros(count, device=x_all.device, dtype=x_all.dtype)
+                mass = torch.zeros_like(degree)
+                aggregate = torch.zeros(count, self.hidden_dim, device=x_all.device, dtype=x_all.dtype)
+                if len(history_indices):
+                    age = torch.clamp((query_day - days[history_indices]) / time_span, min=0.0, max=1.0)
+                    time_features = torch.stack((torch.log1p(age * 100.0), torch.exp(-3.0 * age)), dim=1)
+                    decay = torch.exp(-2.0 * age)
+                    message = self.claim_to_entity[r](history_h) + self.time_projection(time_features)
+                    aggregate.index_add_(0, hist_ids, message * decay.unsqueeze(1))
+                    mass.index_add_(0, hist_ids, decay)
+                    degree.index_add_(0, hist_ids, torch.ones_like(decay))
+                    aggregate = aggregate / mass.clamp_min(1e-6).unsqueeze(1)
+                type_index = NODE_TYPES.index(node_type)
+                type_h = self.node_type_embedding.weight[type_index].unsqueeze(0).expand(count, -1)
+                degree_feature = torch.log1p(degree).unsqueeze(1)
+                entity_h = self.entity_norm[r](type_h + self.degree_projection(degree_feature) + aggregate)
+                query_entity_h = entity_h[all_ids[target_indices]]
+                typed_message = self.entity_to_claim[r](query_entity_h) + self.relation_embedding[r]
+                rel_embed = self.relation_embedding[r].unsqueeze(0).expand(len(target_indices), -1)
+                score = self.attention(torch.cat(
+                    (query_h, typed_message, rel_embed), dim=1
+                ))
+                relation_messages.append((score, typed_message))
 
-        relation_messages = []
-        for r, (relation, node_type, _) in enumerate(RELATION_SPECS):
-            count = int(node_counts[r])
-            all_ids = entity_ids[r]
-            hist_ids = all_ids[history_indices]
-            # Only past claim events contribute messages to entity nodes.
-            degree = torch.zeros(count, device=x_all.device, dtype=x_all.dtype)
-            mass = torch.zeros_like(degree)
-            aggregate = torch.zeros(count, self.hidden_dim, device=x_all.device, dtype=x_all.dtype)
-            if len(history_indices):
-                age = torch.clamp((query_day - days[history_indices]) / time_span, min=0.0, max=1.0)
-                time_features = torch.stack((torch.log1p(age * 100.0), torch.exp(-3.0 * age)), dim=1)
-                decay = torch.exp(-2.0 * age)
-                message = self.claim_to_entity[r](history_h) + self.time_projection(time_features)
-                aggregate.index_add_(0, hist_ids, message * decay.unsqueeze(1))
-                mass.index_add_(0, hist_ids, decay)
-                degree.index_add_(0, hist_ids, torch.ones_like(decay))
-                aggregate = aggregate / mass.clamp_min(1e-6).unsqueeze(1)
-            type_index = NODE_TYPES.index(node_type)
-            type_h = self.node_type_embedding.weight[type_index].unsqueeze(0).expand(count, -1)
-            degree_feature = torch.log1p(degree).unsqueeze(1)
-            entity_h = self.entity_norm[r](type_h + self.degree_projection(degree_feature) + aggregate)
-            query_entity_h = entity_h[all_ids[target_indices]]
-            typed_message = self.entity_to_claim[r](query_entity_h) + self.relation_embedding[r]
-            rel_embed = self.relation_embedding[r].unsqueeze(0).expand(len(target_indices), -1)
-            score = self.attention(torch.cat(
-                (query_h, typed_message, rel_embed), dim=1
-            ))
-            relation_messages.append((score, typed_message))
-
-        scores = torch.cat([item[0] for item in relation_messages], dim=1)
-        weights = torch.softmax(scores, dim=1)
-        messages = torch.stack([item[1] for item in relation_messages], dim=1)
-        aggregated = (weights.unsqueeze(2) * messages).sum(dim=1)
+            scores = torch.cat([item[0] for item in relation_messages], dim=1)
+            weights = torch.softmax(scores, dim=1)
+            messages = torch.stack([item[1] for item in relation_messages], dim=1)
+            aggregated = (weights.unsqueeze(2) * messages).sum(dim=1)
+        else:
+            # Relation-free control: preserve the full model's parameters and
+            # downstream heads, but give claims no entity or graph message.
+            aggregated = torch.zeros_like(query_h)
         embedding = self.fusion(torch.cat((query_h, aggregated), dim=1))
         logits = self.classifier(embedding)
         mu, log_sigma = self.expectation(exo_all[target_indices]).chunk(2, dim=1)
