@@ -1,33 +1,44 @@
-# Temporal graph benchmark — measured results
+# Temporal Graph Benchmark Results — Full graph vs relation-free ablation
 
-The first complete temporal heterogeneous graph benchmark ran successfully in GitHub Actions on CPU: **12 runs** (four held-out mechanisms × seeds 42, 43, 44), 2,400 synthetic claims per run, an eight-epoch cap, batch size 64. Workflow: https://github.com/ishantpant2121/MUJ-DS-2430010379/actions/runs/40562936336. The full artifact `temporal-heterograph-full-40562936336` contains per-fold reports, test predictions and checkpoints and is retained for 90 days from the run.
+## Reproducibility
+Both arms use the parametric synthetic claim generator, four held-out mechanisms (upcoding, unbundling, phantom billing, collusion), seeds 42/43/44, 2,400 claims per fold, an eight-epoch cap, and CPU. Each arm contains 12 fits. The no-graph arm retains the same model and downstream classifier/calibration/gating path but zeros entity-message contributions.
 
-## Aggregate results (mean ± standard deviation across 12 folds)
+Successful combined workflow and artifacts: https://github.com/ishantpant2121/MUJ-DS-2430010379/actions/runs/40680366943
+- Full graph artifact: temporal-heterograph-full-40680366943
+- Relation-free artifact: relation-free-ablation-40680366943
 
-| Metric | Mean ± SD |
-|---|---:|
-| Known-class accuracy | 0.954 ± 0.012 |
-| Known macro-F1 | 0.645 ± 0.107 |
-| Novel AUROC | 0.732 ± 0.170 |
-| Novel average precision | 0.137 ± 0.152 |
-| Novel recall at α = 0.05 | 0.180 ± 0.200 |
-| Known false-rejection rate | 0.044 ± 0.009 |
-| Escalation rate | 0.046 ± 0.009 |
+## Matched aggregates
+All values are means ± sample standard deviation across 12 runs.
 
-## Held-out mechanism results (mean ± SD across three seeds)
+| Metric | Full graph | No-graph control |
+|---|---:|---:|
+| Known-class accuracy | 0.9566 ± 0.0111 | 0.9590 ± 0.0114 |
+| Known macro-F1 | 0.6516 ± 0.0946 | 0.6655 ± 0.0998 |
+| Novel-mechanism AUROC | 0.6965 ± 0.1662 | 0.7062 ± 0.1895 |
+| Novel average precision | 0.0899 ± 0.0687 | 0.0980 ± 0.0741 |
+| Novel recall at alpha=0.05 | 0.1077 ± 0.1263 | 0.1272 ± 0.1273 |
+| Known false-rejection rate | 0.0391 ± 0.0132 | 0.0380 ± 0.0118 |
+| Rare-severe benign false-rejection | 0.0000 ± 0.0000 | 0.0000 ± 0.0000 |
+| Gated novel recall | 0.1077 ± 0.1263 | 0.1212 ± 0.1245 |
+| Escalation rate | 0.0401 ± 0.0131 | 0.0396 ± 0.0115 |
 
-| Held-out mechanism | Novel AUROC | Novel AP | Novel recall at α = 0.05 |
+These are descriptive synthetic outcomes, not estimates of real-world performance. The matched no-graph control is slightly ahead on mean AUROC, AP, novel recall, known accuracy, and macro-F1. This run does not demonstrate a benefit from relational message passing.
+
+## Full graph results by held-out mechanism
+
+| Mechanism | Novel AUROC | Novel AP | Novel recall at alpha=0.05 |
 |---|---:|---:|---:|
-| Upcoding | 0.835 ± 0.070 | 0.162 ± 0.033 | 0.260 ± 0.065 |
-| Unbundling | 0.714 ± 0.111 | 0.045 ± 0.017 | 0.069 ± 0.064 |
-| Phantom billing | 0.886 ± 0.052 | 0.314 ± 0.217 | 0.364 ± 0.310 |
-| Collusion | 0.494 ± 0.049 | 0.027 ± 0.009 | 0.026 ± 0.044 |
+| Upcoding | 0.7510 ± 0.0164 | 0.1307 ± 0.0705 | 0.1505 ± 0.0655 |
+| Unbundling | 0.6876 ± 0.0221 | 0.0359 ± 0.0081 | 0.0000 ± 0.0000 |
+| Phantom billing | 0.8920 ± 0.0192 | 0.1613 ± 0.0304 | 0.2545 ± 0.1376 |
+| Collusion | 0.4553 ± 0.0404 | 0.0314 ± 0.0187 | 0.0256 ± 0.0444 |
 
-## Interpretation and limitations
+The no-graph control’s corresponding AUROCs were 0.7892 ± 0.0455 (upcoding), 0.7058 ± 0.0257 (unbundling), 0.9071 ± 0.0209 (phantom billing) and 0.4226 ± 0.0532 (collusion). This is a particularly important result: relational context did not improve these generated data’s collusion detection and the full graph arm was near/below chance.
 
-- The results are parametric synthetic data, not real insurance claims.
-- Collusion detection is near chance; unbundling recall is also weak. High known-class accuracy should not be mistaken for reliable novel-mechanism discovery.
-- The explained-rarity gate's novel recall exactly equaled raw conformal novel recall in all 12 runs. In this experiment it did not further screen the novel cases already rejected by the conformal rule.
-- The aggregate report did not preserve the denominator for the rare-severe-benign subset; its reported zero false-rejection rate should not be interpreted until the code records and reports those counts.
-- The custom PyTorch encoder is an R-GCN/HGT-style baseline, not canonical PyG HGTConv/RGCNConv. Admission is a one-per-claim proxy; Diagnosis is a severity-bin proxy.
-- Broader baseline/ablation comparisons, shortcut and subgroup audits, verified Synthea/HBP grounding and evaluation on appropriately labelled real claims remain outstanding.
+The explained-rarity gate’s novel recall equals raw conformal rejection recall in the full-graph arm across all 12 folds. The gate therefore did not add recall in this benchmark. The reported zero rare-severe benign false-rejection is limited to this generator and does not imply real-world safety.
+
+## Scope limits and next research
+- These are parametrically generated claims; no real insurer claim labels are used.
+- The custom encoder is R-GCN/HGT-style PyTorch message passing, not canonical PyG HGTConv/RGCNConv.
+- Admission is a one-per-claim synthetic proxy and Diagnosis a severity-bin proxy.
+- Next: investigate near-chance collusion, revise the generator/shortcut design with a pre-declared protocol, run broader baselines and ablations, perform subgroup/cluster audits, verify source provenance and evaluate on appropriately labelled claims where approved.
