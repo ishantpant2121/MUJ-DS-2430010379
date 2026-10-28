@@ -204,7 +204,7 @@ The large LSTM and CNN known-class-accuracy changes under shared inputs show tha
 
 
 \subsection{Typed-node temporal graph benchmark}
-The separate custom temporal heterograph encoder was evaluated in a four-mechanism, three-seed synthetic benchmark (12 runs; 2,400 generated claims per run; eight-epoch cap; batch size 64). The chronological split used 55\% for training, 10\% for model selection, 15\% for known-only calibration, and 20\% for deployment. Input scaling used the training window only. Each query block read entity summaries aggregated from claims strictly earlier than the block; claims in a query block did not update the entity state seen by other claims in that same block. The custom PyTorch model uses typed Claim, Beneficiary, Hospital, Doctor, Admission, Package and Diagnosis nodes with relation-specific channels. Provider and referral-target history are represented as separate relation channels; node type and relation names are proxies and are not full PyG heterogeneous node/edge-store execution. It is not the canonical PyG HGTConv/RGCNConv implementation. Admission is a one-per-claim synthetic proxy and Diagnosis is a severity-bin proxy.
+The separate custom temporal heterograph encoder was evaluated in a four-mechanism, three-seed synthetic benchmark (12 runs; 2,400 generated claims per run; eight-epoch cap; batch size 64). The chronological split used 55\% for training, 10\% for model selection, 15\% for known-only calibration, and 20\% for deployment. Input scaling used the training window only. Each query block read entity summaries aggregated from claims strictly earlier than the block; claims in a query block did not update the entity state seen by other claims in that same block. The custom PyTorch model uses typed Claim, Beneficiary, Hospital, Doctor, Admission, Package and Diagnosis nodes, with six relation-specific historical message channels (beneficiary, hospital, doctor, admission, package and diagnosis). Provider and referral-target relations belong to the separate relation-summary pilot, not this typed-node encoder. It is not the canonical PyG HGTConv/RGCNConv implementation. Admission is a one-per-claim synthetic proxy and Diagnosis is a severity-bin proxy.
 
 Across all 12 folds, known-class accuracy was $0.957\pm0.011$ and macro-F1 was $0.652\pm0.095$. Novel-mechanism AUROC averaged $0.696\pm0.166$, average precision $0.090\pm0.069$, and recall at the nominal $\alpha=0.05$ conformal rejection threshold $0.108\pm0.126$. The known false-rejection rate was $0.039\pm0.013$ and the explained-rarity escalation rate was $0.040\pm0.013$. These are descriptive synthetic results; a nominal conformal level does not guarantee coverage under temporal drift.
 
@@ -219,10 +219,10 @@ Table~\ref{tab:graph_mechanism} shows substantial mechanism dependence. Phantom-
 \toprule
 Held-out mechanism & Novel AUROC & Novel AP & Novel recall ($\alpha=0.05$)\\
 \midrule
-Upcoding & $0.835\pm0.070$ & $0.162\pm0.033$ & $0.260\pm0.065$\\
-Unbundling & $0.714\pm0.111$ & $0.045\pm0.017$ & $0.069\pm0.064$\\
-Phantom billing & $0.886\pm0.052$ & $0.314\pm0.217$ & $0.364\pm0.310$\\
-Collusion & $0.494\pm0.049$ & $0.027\pm0.009$ & $0.026\pm0.044$\\
+Upcoding & $0.751\pm0.016$ & $0.131\pm0.071$ & $0.150\pm0.066$\\
+Unbundling & $0.688\pm0.022$ & $0.036\pm0.008$ & $0.000\pm0.000$\\
+Phantom billing & $0.892\pm0.019$ & $0.161\pm0.030$ & $0.255\pm0.138$\\
+Collusion & $0.455\pm0.040$ & $0.031\pm0.019$ & $0.026\pm0.044$\\
 \bottomrule
 \end{tabular}
 \end{table*}
