@@ -1,0 +1,33 @@
+{
+  "experiment": "OW-ERF temporal heterograph relation-free control",
+  "source_workflow_run": 40680366943,
+  "workflow_url": "https://github.com/ishantpant2121/MUJ-DS-2430010379/actions/runs/40680366943",
+  "artifact_name": "relation-free-ablation-40680366943",
+  "protocol": {
+    "folds": 12,
+    "seeds": [42, 43, 44],
+    "held_out_mechanisms": ["upcoding", "unbundling", "phantom_billing", "collusion"],
+    "n_samples_per_fold": 2400,
+    "epoch_cap": 8,
+    "batch_size": 64,
+    "device": "cpu",
+    "data": "parametric synthetic claims only",
+    "ablation": "no_graph; identical model parameter shapes and downstream pipeline with zero entity-message aggregation"
+  },
+  "aggregate_metrics": {
+    "known_accuracy": {"mean": 0.9589507940, "std": 0.0114167795},
+    "known_macro_f1": {"mean": 0.6655222026, "std": 0.0998048265},
+    "novel_auroc": {"mean": 0.7062029059, "std": 0.1895060839},
+    "novel_ap": {"mean": 0.0980282745, "std": 0.0740978893},
+    "novel_recall_at_alpha_0_05": {"mean": 0.1271762959, "std": 0.1273392223},
+    "known_false_rejection_at_alpha_0_05": {"mean": 0.0380422321, "std": 0.0118226931},
+    "rare_severe_benign_false_rejection": {"mean": 0.0, "std": 0.0, "interpretation": "synthetic-only; not a real-world safety guarantee"},
+    "gated_novel_recall": {"mean": 0.1212239150, "std": 0.1245357638},
+    "escalation_rate": {"mean": 0.0395833333, "std": 0.0115141547}
+  },
+  "interpretation": [
+    "All measurements are synthetic-only and descriptive.",
+    "The matched control slightly exceeds the full graph arm on average known accuracy, known macro-F1, novelty AUROC, AP and novel recall.",
+    "This is evidence that the current graph branch did not add benefit on this simulator, not evidence that graph context can never help real claim investigations."
+  ]
+}
