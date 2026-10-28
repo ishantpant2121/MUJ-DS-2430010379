@@ -234,6 +234,9 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
     predicted_orig = class_to_label[np.argmax(logits, axis=1)]
     known_y = test_labels[test_known]
     known_pred = predicted_orig[test_known]
+    rare_severe_benign_mask = (test_labels == 0) & data["benign_outlier"][calibration_end:n_samples]
+    rare_severe_count = int(rare_severe_benign_mask.sum())
+    rare_severe_false_rejected = int(test_rejected[rare_severe_benign_mask].sum())
     metrics: dict[str, Any] = {
         "known_accuracy": float(accuracy_score(known_y, known_pred)) if len(known_y) else None,
         "known_macro_f1": float(f1_score(known_y, known_pred, labels=known_labels,
@@ -245,9 +248,10 @@ def train_fold(*, n_samples: int, hidden_mechanism: str, seed: int, epochs: int,
         "novel_recall_at_alpha": float(test_rejected[test_novel].mean()) if test_novel.any() else None,
         "known_false_rejection_at_alpha": float(test_rejected[test_known].mean()) if test_known.any() else None,
         "rare_severe_benign_false_rejection": (
-            float(test_rejected[(test_labels == 0) & data["benign_outlier"][calibration_end:n_samples]].mean())
-            if np.any((test_labels == 0) & data["benign_outlier"][calibration_end:n_samples]) else None
+            float(rare_severe_false_rejected / rare_severe_count) if rare_severe_count else None
         ),
+        "rare_severe_benign_count": rare_severe_count,
+        "rare_severe_benign_false_rejected_count": rare_severe_false_rejected,
         "gated_novel_recall": float(escalated[test_novel].mean()) if test_novel.any() else None,
         "escalation_rate": float(escalated.mean()),
         "calibration_known_false_rejection": float((cal_p <= alpha).mean()),
@@ -337,7 +341,11 @@ def main() -> None:
             ))
     summary = {
         "title": "Temporal heterogeneous graph OW-ERF synthetic benchmark",
-        "model": "typed temporal relation-specific message passing + relation attention + calibrated explained-rarity gate",
+        "model": (
+            "typed temporal relation-specific message passing + relation attention + calibrated explained-rarity gate"
+            if args.ablation == "full" else
+            "relation-free claim-only control: entity messages disabled; same parameter shapes and calibration/gating pipeline"
+        ),
         "ablation": args.ablation,
         "protocol": {
             "folds": len(reports), "seeds": seeds, "hidden_mechanisms": hidden_mechanisms,
