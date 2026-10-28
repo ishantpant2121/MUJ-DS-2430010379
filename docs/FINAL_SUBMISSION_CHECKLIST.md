@@ -7,7 +7,7 @@ This checklist distinguishes the completed repository artifacts from research an
 - [x] Policy recommender prototype and Streamlit application.
 - [x] OW-ERF tabular and temporal relation-summary pilots.
 - [x] Standalone LSTM/CNN/Transformer models and controlled 60-epoch shared-input comparison.
-- [x] Custom typed-node temporal graph encoder, training/evaluation script and strict-past graph tests.
+- [x] Custom typed-node temporal graph encoder with eight node types/eight relation channels, training/evaluation script and strict-past graph tests.
 - [x] Full graph synthetic benchmark: 12 runs (four held-out mechanisms × three generator seeds; 2,400 synthetic claims per run; eight-epoch cap).
 - [x] Relation-free matched control benchmark: same 12 held-out-mechanism/generator-seed combinations.
 - [x] Synthea CSV graph preparation adapter with input-file hash manifest and explicit no-fraud-label warning.
