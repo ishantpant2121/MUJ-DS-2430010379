@@ -5,41 +5,151 @@
   "artifact_name": "temporal-heterograph-full-40680366943",
   "protocol": {
     "folds": 12,
-    "seeds": [42, 43, 44],
-    "held_out_mechanisms": ["upcoding", "unbundling", "phantom_billing", "collusion"],
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "held_out_mechanisms": [
+      "upcoding",
+      "unbundling",
+      "phantom_billing",
+      "collusion"
+    ],
     "n_samples_per_fold": 2400,
     "epoch_cap": 8,
     "batch_size": 64,
     "device": "cpu",
     "data": "parametric synthetic claim generator; no real claim data",
     "model": "custom PyTorch typed-node temporal message passing; not canonical PyG HGTConv/RGCNConv",
-    "nodes": ["Claim", "Beneficiary", "Hospital", "Doctor", "Admission", "Package", "Diagnosis"],
-    "relation_channels": 6,
+    "nodes": [
+      "Claim",
+      "Beneficiary",
+      "Hospital",
+      "Doctor",
+      "Provider",
+      "Admission",
+      "Package",
+      "Diagnosis"
+    ],
+    "relation_channels": 8,
     "admission_proxy": "one synthetic admission node per claim",
-    "diagnosis_proxy": "severity bin"
+    "diagnosis_proxy": "severity bin",
+    "relation_names": [
+      "provider",
+      "hospital",
+      "doctor",
+      "beneficiary",
+      "admission",
+      "package",
+      "diagnosis",
+      "referral_target"
+    ]
   },
   "aggregate_metrics": {
-    "known_accuracy": {"mean": 0.9566408857, "std": 0.0111030199},
-    "known_macro_f1": {"mean": 0.6516288968, "std": 0.0945716112},
-    "novel_auroc": {"mean": 0.6964899932, "std": 0.1661790931},
-    "novel_ap": {"mean": 0.0898554916, "std": 0.0687205975},
-    "novel_recall_at_alpha_0_05": {"mean": 0.1076687202, "std": 0.1263362670},
-    "known_false_rejection_at_alpha_0_05": {"mean": 0.0391200453, "std": 0.0131565403},
-    "rare_severe_benign_false_rejection": {"mean": 0.0, "std": 0.0, "interpretation": "synthetic-only; not a real-world safety guarantee"},
-    "gated_novel_recall": {"mean": 0.1076687202, "std": 0.1263362670},
-    "escalation_rate": {"mean": 0.0401041667, "std": 0.0130596014}
+    "known_accuracy": {
+      "mean": 0.9566408857,
+      "std": 0.0111030199
+    },
+    "known_macro_f1": {
+      "mean": 0.6516288968,
+      "std": 0.0945716112
+    },
+    "novel_auroc": {
+      "mean": 0.6964899932,
+      "std": 0.1661790931
+    },
+    "novel_ap": {
+      "mean": 0.0898554916,
+      "std": 0.0687205975
+    },
+    "novel_recall_at_alpha_0_05": {
+      "mean": 0.1076687202,
+      "std": 0.126336267
+    },
+    "known_false_rejection_at_alpha_0_05": {
+      "mean": 0.0391200453,
+      "std": 0.0131565403
+    },
+    "rare_severe_benign_false_rejection": {
+      "mean": 0,
+      "std": 0,
+      "interpretation": "synthetic-only; not a real-world safety guarantee"
+    },
+    "gated_novel_recall": {
+      "mean": 0.1076687202,
+      "std": 0.126336267
+    },
+    "escalation_rate": {
+      "mean": 0.0401041667,
+      "std": 0.0130596014
+    }
   },
   "by_mechanism": {
-    "upcoding": {"novel_auroc": {"mean": 0.751030, "std": 0.016376}, "novel_ap": {"mean": 0.130728, "std": 0.070539}, "novel_recall_at_alpha_0_05": {"mean": 0.150488, "std": 0.065541}},
-    "unbundling": {"novel_auroc": {"mean": 0.687620, "std": 0.022133}, "novel_ap": {"mean": 0.035906, "std": 0.008119}, "novel_recall_at_alpha_0_05": {"mean": 0.0, "std": 0.0}},
-    "phantom_billing": {"novel_auroc": {"mean": 0.891971, "std": 0.019166}, "novel_ap": {"mean": 0.161344, "std": 0.030446}, "novel_recall_at_alpha_0_05": {"mean": 0.254545, "std": 0.137570}},
-    "collusion": {"novel_auroc": {"mean": 0.455338, "std": 0.040363}, "novel_ap": {"mean": 0.031444, "std": 0.018706}, "novel_recall_at_alpha_0_05": {"mean": 0.025641, "std": 0.044412}}
+    "upcoding": {
+      "novel_auroc": {
+        "mean": 0.75103,
+        "std": 0.016376
+      },
+      "novel_ap": {
+        "mean": 0.130728,
+        "std": 0.070539
+      },
+      "novel_recall_at_alpha_0_05": {
+        "mean": 0.150488,
+        "std": 0.065541
+      }
+    },
+    "unbundling": {
+      "novel_auroc": {
+        "mean": 0.68762,
+        "std": 0.022133
+      },
+      "novel_ap": {
+        "mean": 0.035906,
+        "std": 0.008119
+      },
+      "novel_recall_at_alpha_0_05": {
+        "mean": 0,
+        "std": 0
+      }
+    },
+    "phantom_billing": {
+      "novel_auroc": {
+        "mean": 0.891971,
+        "std": 0.019166
+      },
+      "novel_ap": {
+        "mean": 0.161344,
+        "std": 0.030446
+      },
+      "novel_recall_at_alpha_0_05": {
+        "mean": 0.254545,
+        "std": 0.13757
+      }
+    },
+    "collusion": {
+      "novel_auroc": {
+        "mean": 0.455338,
+        "std": 0.040363
+      },
+      "novel_ap": {
+        "mean": 0.031444,
+        "std": 0.018706
+      },
+      "novel_recall_at_alpha_0_05": {
+        "mean": 0.025641,
+        "std": 0.044412
+      }
+    }
   },
   "interpretation": [
     "All measurements are synthetic-only and descriptive.",
     "A matched no-graph control was slightly better on mean novelty AUROC, AP and recall; the current experiment does not demonstrate a benefit from graph message passing.",
     "Collusion AUROC is below chance and novel recall is near zero; investigate the generator and graph construction.",
     "The explained-rarity gate did not further reduce or improve full-graph novel recall in these 12 runs.",
-    "The rare-severe false-rejection rate is zero only on the generated subset and is not a real-world safety finding."
+    "The rare-severe false-rejection rate is zero only on the generated subset and is not a real-world safety finding.",
+    "The graph has eight node types and eight relation channels, with distinct provider/referral-target projections over a shared Provider node namespace.",
+    "A matched relation-free control is stored under results/temporal_heterograph_no_graph/; it slightly exceeds mean novelty AUROC/AP/recall, so this run does not demonstrate graph-branch benefit."
   ]
 }
