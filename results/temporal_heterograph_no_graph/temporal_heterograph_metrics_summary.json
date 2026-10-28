@@ -5,25 +5,84 @@
   "artifact_name": "relation-free-ablation-40680366943",
   "protocol": {
     "folds": 12,
-    "seeds": [42, 43, 44],
-    "held_out_mechanisms": ["upcoding", "unbundling", "phantom_billing", "collusion"],
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "held_out_mechanisms": [
+      "upcoding",
+      "unbundling",
+      "phantom_billing",
+      "collusion"
+    ],
     "n_samples_per_fold": 2400,
     "epoch_cap": 8,
     "batch_size": 64,
     "device": "cpu",
     "data": "parametric synthetic claims only",
-    "ablation": "no_graph; identical model parameter shapes and downstream pipeline with zero entity-message aggregation"
+    "ablation": "no_graph; identical model parameter shapes and downstream pipeline with zero entity-message aggregation",
+    "nodes": [
+      "Claim",
+      "Beneficiary",
+      "Hospital",
+      "Doctor",
+      "Provider",
+      "Admission",
+      "Package",
+      "Diagnosis"
+    ],
+    "relation_channels": 8,
+    "relation_names": [
+      "provider",
+      "hospital",
+      "doctor",
+      "beneficiary",
+      "admission",
+      "package",
+      "diagnosis",
+      "referral_target"
+    ],
+    "control_definition": "same model parameter shapes and downstream pipeline; all entity-message aggregation is zeroed"
   },
   "aggregate_metrics": {
-    "known_accuracy": {"mean": 0.9589507940, "std": 0.0114167795},
-    "known_macro_f1": {"mean": 0.6655222026, "std": 0.0998048265},
-    "novel_auroc": {"mean": 0.7062029059, "std": 0.1895060839},
-    "novel_ap": {"mean": 0.0980282745, "std": 0.0740978893},
-    "novel_recall_at_alpha_0_05": {"mean": 0.1271762959, "std": 0.1273392223},
-    "known_false_rejection_at_alpha_0_05": {"mean": 0.0380422321, "std": 0.0118226931},
-    "rare_severe_benign_false_rejection": {"mean": 0.0, "std": 0.0, "interpretation": "synthetic-only; not a real-world safety guarantee"},
-    "gated_novel_recall": {"mean": 0.1212239150, "std": 0.1245357638},
-    "escalation_rate": {"mean": 0.0395833333, "std": 0.0115141547}
+    "known_accuracy": {
+      "mean": 0.958950794,
+      "std": 0.0114167795
+    },
+    "known_macro_f1": {
+      "mean": 0.6655222026,
+      "std": 0.0998048265
+    },
+    "novel_auroc": {
+      "mean": 0.7062029059,
+      "std": 0.1895060839
+    },
+    "novel_ap": {
+      "mean": 0.0980282745,
+      "std": 0.0740978893
+    },
+    "novel_recall_at_alpha_0_05": {
+      "mean": 0.1271762959,
+      "std": 0.1273392223
+    },
+    "known_false_rejection_at_alpha_0_05": {
+      "mean": 0.0380422321,
+      "std": 0.0118226931
+    },
+    "rare_severe_benign_false_rejection": {
+      "mean": 0,
+      "std": 0,
+      "interpretation": "synthetic-only; not a real-world safety guarantee"
+    },
+    "gated_novel_recall": {
+      "mean": 0.121223915,
+      "std": 0.1245357638
+    },
+    "escalation_rate": {
+      "mean": 0.0395833333,
+      "std": 0.0115141547
+    }
   },
   "interpretation": [
     "All measurements are synthetic-only and descriptive.",
