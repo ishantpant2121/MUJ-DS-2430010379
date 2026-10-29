@@ -16,7 +16,7 @@ This checklist distinguishes the completed repository artifacts from research an
 - [x] Paper source and PDF build successful on the latest CI run.
 - [x] Results summaries are tracked under results/temporal_heterograph_full/.
 - [x] Full per-fold graph output and matched relation-free control are preserved as GitHub Actions artifacts:
-  - Full graph + smoke + no-graph control: https://github.com/ishantpant2121/MUJ-DS-2430010379/actions/runs/40680366943
+  - Full graph + smoke + no-graph control: https://github.com/ishantpant2121/MUJ-DS-2430010379/actions/runs/40870707994
   - Earlier full graph run: https://github.com/ishantpant2121/MUJ-DS-2430010379/actions/runs/40562936336
 - [x] Repository audit found no zero-byte files, .gitkeep placeholders, or tracked empty-folder placeholders.
 
