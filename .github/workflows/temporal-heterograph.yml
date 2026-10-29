@@ -78,8 +78,24 @@ jobs:
         run: >-
           python scripts/train_temporal_heterograph.py
           --n-samples 2400 --epochs 8 --batch-size 64 --patience 3
-          --seeds 42,43,44 --hidden all
+          --seeds 42,43,44 --hidden all --ablation full
           --output-dir results/temporal_heterograph_full
+      - name: Verify graph arm and stamp source revision
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path("results/temporal_heterograph_full/temporal_heterograph_summary.json")
+          d = json.loads(p.read_text())
+          assert d.get("ablation") == "full", f"Expected full graph, got {d.get('ablation')!r}"
+          assert d.get("protocol", {}).get("folds") == 12, "Expected 12 folds"
+          d["source_commit"] = os.environ["SOURCE_COMMIT"]
+          d["artifact_role"] = "full_graph"
+          p.write_text(json.dumps(d, indent=2))
+          print("Verified full-graph result for", d["source_commit"])
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: temporal-heterograph-full-${{ github.run_id }}
@@ -109,6 +125,22 @@ jobs:
           --n-samples 2400 --epochs 8 --batch-size 64 --patience 3
           --seeds 42,43,44 --hidden all --ablation no_graph
           --output-dir results/temporal_heterograph_no_graph
+      - name: Verify control arm and stamp source revision
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path("results/temporal_heterograph_no_graph/temporal_heterograph_summary.json")
+          d = json.loads(p.read_text())
+          assert d.get("ablation") == "no_graph", f"Expected no_graph, got {d.get('ablation')!r}"
+          assert d.get("protocol", {}).get("folds") == 12, "Expected 12 folds"
+          d["source_commit"] = os.environ["SOURCE_COMMIT"]
+          d["artifact_role"] = "relation_free_control"
+          p.write_text(json.dumps(d, indent=2))
+          print("Verified relation-free control for", d["source_commit"])
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: relation-free-ablation-${{ github.run_id }}
