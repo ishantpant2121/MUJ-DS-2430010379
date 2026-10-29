@@ -78,7 +78,7 @@ jobs:
         run: >-
           python scripts/train_temporal_heterograph.py
           --n-samples 2400 --epochs 8 --batch-size 64 --patience 3
-          --seeds 42,43,44 --hidden all
+          --seeds 42,43,44 --hidden all --ablation full
           --output-dir results/temporal_heterograph_full
       - name: Verify graph arm and stamp source revision
         env:
